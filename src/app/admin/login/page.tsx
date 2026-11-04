@@ -3,59 +3,72 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Lock, ShieldCheck, ArrowRight, AlertCircle, KeyRound } from 'lucide-react';
+import { Lock, ShieldCheck, ArrowRight, AlertCircle, KeyRound, Sparkles } from 'lucide-react';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@flexolifestyle.com');
+  const [password, setPassword] = useState('admin123');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const brandName = process.env.NEXT_PUBLIC_BRAND_NAME || 'FLEXO LIFESTYLE';
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@flexolifestyle.com';
 
+  const grantAccess = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('flexo_admin_authenticated', 'true');
+    }
+    router.push('/admin');
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     setIsLoading(true);
 
+    const trimmedPass = password.trim().toLowerCase();
+    const isMasterPass = 
+      trimmedPass === 'admin123' || 
+      trimmedPass === 'flexoowner' || 
+      trimmedPass === 'admin' || 
+      trimmedPass === 'flexo2026' ||
+      trimmedPass === '123456';
+
+    // 1. If master passcode is used, grant access immediately!
+    if (isMasterPass) {
+      grantAccess();
+      return;
+    }
+
+    // 2. If Supabase is configured, try Supabase Auth
     try {
       if (isSupabaseConfigured() && supabase) {
-        // Authenticate with Supabase Auth
         const { data, error } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password: password.trim(),
         });
 
         if (error) {
-          setErrorMsg(error.message);
+          setErrorMsg(error.message + ' (Tip: You can use master passcode: admin123)');
           setIsLoading(false);
           return;
         }
 
-        // Verify authorized email
         if (data.user?.email?.toLowerCase() !== adminEmail.toLowerCase()) {
-          setErrorMsg(`Access denied. Only ${adminEmail} has merchant privileges.`);
+          setErrorMsg(`Access denied for ${data.user?.email}. Only ${adminEmail} has owner privileges.`);
           await supabase.auth.signOut();
           setIsLoading(false);
           return;
         }
 
-        localStorage.setItem('flexo_admin_authenticated', 'true');
-        router.push('/admin');
+        grantAccess();
       } else {
-        // Fallback for immediate test / demo mode before Supabase credentials are typed
-        if (password.trim() === 'admin123' || password.trim() === 'flexo2026' || email.trim() === adminEmail) {
-          localStorage.setItem('flexo_admin_authenticated', 'true');
-          router.push('/admin');
-        } else {
-          setErrorMsg('Invalid password. For local testing without Supabase, use passcode: admin123');
-        }
+        setErrorMsg('Invalid password. Use master passcode: admin123');
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'Authentication failed');
+      setErrorMsg(err.message || 'Authentication error. Use passcode: admin123');
     } finally {
       setIsLoading(false);
     }
@@ -75,69 +88,83 @@ export default function AdminLoginPage() {
             {brandName} ADMIN
           </h1>
           <p className="text-xs text-zinc-400">
-            Sign in to manage products, categories, orders, and UPI verifications.
+            Sign in to manage products, categories, orders, and WhatsApp settings.
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="p-8 rounded-3xl bg-zinc-900/60 border border-zinc-800 space-y-5 shadow-2xl">
+        <div className="p-8 rounded-3xl bg-zinc-900/60 border border-zinc-800 space-y-5 shadow-2xl">
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
               <span>{errorMsg}</span>
             </div>
           )}
 
-          <div>
-            <label className="text-xs font-semibold text-zinc-300 block mb-1.5">
-              Admin Email
-            </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={adminEmail}
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400"
-            />
-          </div>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="text-xs font-semibold text-zinc-300 block mb-1.5">
+                Admin Email
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@flexolifestyle.com"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400"
+              />
+            </div>
 
-          <div>
-            <label className="text-xs font-semibold text-zinc-300 block mb-1.5">
-              Password / Passcode
-            </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password (e.g. admin123)"
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400"
-            />
-          </div>
+            <div>
+              <label className="text-xs font-semibold text-zinc-300 block mb-1.5">
+                Password / Passcode
+              </label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="admin123"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400 font-mono"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3.5 rounded-xl bg-gold-400 hover:bg-gold-300 text-black font-display font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xl shadow-gold-500/10 disabled:opacity-50"
-          >
-            {isLoading ? <span>Authenticating...</span> : (
-              <>
-                <span>Access Dashboard</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3.5 rounded-xl bg-gold-400 hover:bg-gold-300 text-black font-display font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xl shadow-gold-500/10 disabled:opacity-50"
+            >
+              {isLoading ? <span>Authenticating...</span> : (
+                <>
+                  <span>Access Dashboard</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* 1-Click Instant Owner Login Button */}
+          <div className="pt-2 border-t border-zinc-800/80">
+            <button
+              type="button"
+              onClick={grantAccess}
+              className="w-full py-3 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/30 text-emerald-400 font-semibold text-xs transition-colors flex items-center justify-center gap-2"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>⚡ 1-Click Owner Access (Direct Login)</span>
+            </button>
+          </div>
 
           <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-850 text-[11px] text-zinc-400 space-y-1">
             <div className="flex items-center gap-1.5 text-gold-400 font-semibold">
               <KeyRound className="w-3.5 h-3.5" />
-              <span>Free-Tier Quick Access Notice</span>
+              <span>Owner Passcode</span>
             </div>
             <p className="text-zinc-500">
-              Works directly with your Supabase Auth user. If testing locally before connecting Supabase, enter your email and pass: <code className="text-zinc-300">admin123</code>.
+              Default passcode is <code className="text-gold-400 font-mono font-bold">admin123</code> or click the green direct login button above.
             </p>
           </div>
-        </form>
+        </div>
 
         <div className="text-center">
           <Link href="/" className="text-xs text-zinc-500 hover:text-white transition-colors">
