@@ -187,3 +187,4 @@ git push -u origin main
 - **Images:** All images utilize Next.js AVIF/WebP responsive sizing with automatic lazy loading.
 - **Database Calls:** Queries are cached and paginated, preventing unnecessary Supabase egress bandwidth.
 - **Zero Payment Fees:** Direct UPI and COD payments incur zero gateway commission.
+# flexo-lifestyle
