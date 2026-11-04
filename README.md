@@ -188,3 +188,4 @@ git push -u origin main
 - **Database Calls:** Queries are cached and paginated, preventing unnecessary Supabase egress bandwidth.
 - **Zero Payment Fees:** Direct UPI and COD payments incur zero gateway commission.
 # flexo-lifestyle
+# flexo-lifestyle
