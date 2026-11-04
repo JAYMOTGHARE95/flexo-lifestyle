@@ -86,8 +86,8 @@ export default function DealsSection() {
           </div>
         </div>
 
-        {/* Deals Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Deals Grid - 2 columns on mobile, 4 on desktop */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {dealProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

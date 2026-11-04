@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { CartProvider } from '@/context/CartContext';
 import Navbar from '@/components/layout/Navbar';
@@ -6,8 +6,17 @@ import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/layout/CartDrawer';
 import WhatsAppFloat from '@/components/layout/WhatsAppFloat';
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: 'cover',
+  themeColor: '#09090b',
+};
+
 const brandName = process.env.NEXT_PUBLIC_BRAND_NAME || 'FLEXO LIFESTYLE';
-const brandTagline = process.env.NEXT_PUBLIC_BRAND_TAGLINE || 'Elevate Your Everyday • Luxury Fashion & Streetwear';
+const brandTagline = process.env.NEXT_PUBLIC_BRAND_TAGLINE || 'Wear it. Flaunt it. Flex it.';
 
 export const metadata: Metadata = {
   title: {

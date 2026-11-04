@@ -1,4 +1,4 @@
-# FLEXO LIFESTYLE • Luxury Fashion & E-Commerce Web Platform
+# FLEXO LIFESTYLE • "Wear it. Flaunt it. Flex it."
 
 > A production-ready, animated luxury e-commerce platform built for fashion, automatic watches, footwear, leather goods, and lifestyle accessories. Designed for 100% **FREE-TIER** deployment on Next.js, Supabase, and Vercel with zero paid subscriptions. Includes Flipkart-inspired conversion features (pincode delivery estimator, deal timers, ratings) and instant WhatsApp ordering for customers.
 

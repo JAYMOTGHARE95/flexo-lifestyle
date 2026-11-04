@@ -1,9 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
-import { Truck, RotateCcw, ShieldCheck, Clock } from 'lucide-react';
+import { Truck, ShieldCheck, Clock, MessageCircle } from 'lucide-react';
 
 export default function ShippingPage() {
   const brandName = process.env.NEXT_PUBLIC_BRAND_NAME || 'FLEXO LIFESTYLE';
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '919876543210';
 
   return (
     <div className="bg-zinc-950 min-h-screen py-16 sm:py-24">
@@ -13,10 +14,10 @@ export default function ShippingPage() {
             Customer Assurance
           </span>
           <h1 className="font-display font-black text-3xl sm:text-5xl text-white tracking-tight">
-            SHIPPING & RETURNS POLICY
+            SHIPPING & DELIVERY INFORMATION
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400">
-            Clear, transparent policies engineered for total peace of mind across India.
+            Clear, transparent logistics and express courier dispatch across India.
           </p>
         </div>
 
@@ -35,9 +36,9 @@ export default function ShippingPage() {
           </div>
 
           <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800 text-center">
-            <RotateCcw className="w-6 h-6 text-gold-400 mx-auto mb-2" />
-            <span className="font-bold text-xs text-white block">7 Days</span>
-            <span className="text-[11px] text-zinc-500">Easy replacement</span>
+            <MessageCircle className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
+            <span className="font-bold text-xs text-white block">WhatsApp Help</span>
+            <span className="text-[11px] text-zinc-500">Instant assistance</span>
           </div>
 
           <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800 text-center">
@@ -52,7 +53,7 @@ export default function ShippingPage() {
           <div className="space-y-3 pt-6">
             <h2 className="font-display font-bold text-lg text-white">1. Dispatch & Delivery Timelines</h2>
             <p>
-              All orders placed before 2:00 PM IST on business days are dispatched within 24 hours from our fulfillment ateliers in Bengaluru and Mumbai.
+              All orders placed before 2:00 PM IST on business days are dispatched within 24 hours from our fulfillment hubs in Bengaluru and Mumbai.
             </p>
             <ul className="list-disc pl-5 space-y-1 text-zinc-400">
               <li>Metro Cities (Delhi NCR, Mumbai, Bengaluru, Chennai, Kolkata, Hyderabad): 2 to 3 Business Days</li>
@@ -61,17 +62,27 @@ export default function ShippingPage() {
             </ul>
           </div>
 
-          <div id="returns" className="space-y-3 pt-6">
-            <h2 className="font-display font-bold text-lg text-white">2. 7-Day Replacement & Return Policy</h2>
+          <div className="space-y-3 pt-6">
+            <h2 className="font-display font-bold text-lg text-white">2. WhatsApp Help & Order Verification</h2>
             <p>
-              We want you to be 100% satisfied with your luxury pieces. If an item does not fit or arrives with any defect:
+              Have a question about your shipment or want real-time dispatch updates? Our team provides dedicated WhatsApp Help for every order.
             </p>
             <ul className="list-disc pl-5 space-y-1 text-zinc-400">
-              <li>Notify our WhatsApp concierge or email within 7 days of delivery.</li>
-              <li>Ensure the item is unworn, unwashed, and in its original luxury packaging with tags intact.</li>
-              <li>We will arrange a free reverse pickup from your doorstep.</li>
-              <li>Upon arrival and inspection, your replacement size or refund will be processed immediately.</li>
+              <li>Message us anytime on WhatsApp for live parcel updates.</li>
+              <li>Receive instant dispatch tracking links via SMS and WhatsApp.</li>
+              <li>Priority support for address changes before dispatch.</li>
             </ul>
+            <div className="pt-2">
+              <a
+                href={`https://wa.me/${whatsappNumber}?text=Hi%20${encodeURIComponent(brandName)}%2C%20I%20have%20a%20question%20about%20shipping`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold hover:bg-emerald-600 hover:text-white transition-colors"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>Contact WhatsApp Help</span>
+              </a>
+            </div>
           </div>
 
           <div className="space-y-3 pt-6">

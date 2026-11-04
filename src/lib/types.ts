@@ -1,11 +1,18 @@
-export type CategorySlug = 'clothing' | 'watches' | 'shoes' | 'accessories' | 'lifestyle';
+export type CategorySlug = string;
+
+export interface Subcategory {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 export interface Category {
   id: string;
   name: string;
-  slug: CategorySlug;
+  slug: string;
   description: string;
   image: string;
+  subcategories?: Subcategory[];
   itemCount?: number;
 }
 
@@ -14,7 +21,8 @@ export interface Product {
   name: string;
   slug: string;
   description: string;
-  category: CategorySlug;
+  category: string;
+  subcategory?: string;
   price: number;
   discountPrice?: number;
   images: string[];
@@ -82,4 +90,17 @@ export interface Review {
   comment: string;
   date: string;
   verifiedPurchase: boolean;
+}
+
+export interface SiteSettings {
+  brandName: string;
+  tagline: string;
+  whatsappNumber: string;
+  whatsappGroupLink: string;
+  whatsappQrCodeUrl: string;
+  upiId: string;
+  upiName: string;
+  announcementText: string;
+  announcementCoupon: string;
+  freeShippingThreshold: number;
 }

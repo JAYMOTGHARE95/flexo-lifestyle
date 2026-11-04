@@ -50,11 +50,11 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-50px' }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="group relative flex flex-col bg-zinc-950 border border-zinc-800/80 rounded-2xl overflow-hidden hover:border-zinc-700/80 transition-all duration-300 shadow-lg hover:shadow-2xl"
+      viewport={{ once: true, margin: '-30px' }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="group relative flex flex-col bg-zinc-950 border border-zinc-800/80 rounded-2xl overflow-hidden hover:border-zinc-700/80 transition-all duration-300 shadow-md hover:shadow-2xl"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -83,14 +83,14 @@ export default function ProductCard({ product }: ProductCardProps) {
         )}
 
         {/* Badges Overlay */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+        <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1 z-10">
           {discountPercent > 0 && (
-            <span className="px-2.5 py-1 rounded-md bg-rose-600 text-white font-mono text-[11px] font-bold uppercase tracking-wider shadow-md">
+            <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded bg-rose-600 text-white font-mono text-[9px] sm:text-[11px] font-bold uppercase tracking-wider shadow">
               {discountPercent}% OFF
             </span>
           )}
           {product.isFeatured && (
-            <span className="px-2.5 py-1 rounded-md bg-gold-400 text-black font-mono text-[10px] font-extrabold uppercase tracking-wider shadow-md">
+            <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded bg-gold-400 text-black font-mono text-[8px] sm:text-[10px] font-extrabold uppercase tracking-wider shadow">
               Exclusive
             </span>
           )}
@@ -99,24 +99,24 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Wishlist Button */}
         <button
           onClick={handleWishlistToggle}
-          className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all z-10 ${
+          className={`absolute top-2 sm:top-3 right-2 sm:right-3 p-1.5 sm:p-2 rounded-full backdrop-blur-md transition-all z-10 ${
             isWishlisted
               ? 'bg-rose-500 text-white'
-              : 'bg-black/40 text-zinc-300 hover:text-white hover:bg-black/70'
+              : 'bg-black/50 text-zinc-300 hover:text-white'
           }`}
           aria-label="Save to wishlist"
         >
-          <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
+          <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isWishlisted ? 'fill-current' : ''}`} />
         </button>
 
-        {/* Quick WhatsApp Inquiry on Image Hover */}
+        {/* Quick WhatsApp Inquiry - visible always on touch mobile, hover on desktop */}
         <button
           onClick={handleWhatsAppInquiry}
-          className="absolute bottom-3 left-3 p-2 rounded-full bg-emerald-600/90 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-emerald-500 z-10 shadow-lg"
+          className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 p-1.5 sm:p-2 rounded-full bg-emerald-600/90 hover:bg-emerald-500 text-white opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10 shadow-lg active:scale-90"
           title="Inquire / Order on WhatsApp"
           aria-label="Order on WhatsApp"
         >
-          <MessageCircle className="w-4 h-4" />
+          <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
         {/* Flipkart-style Quick Add Button on Hover (Desktop) */}
@@ -150,21 +150,21 @@ export default function ProductCard({ product }: ProductCardProps) {
       </Link>
 
       {/* Product Information */}
-      <div className="p-4 flex flex-col flex-1 justify-between gap-3">
+      <div className="p-3 sm:p-4 flex flex-col flex-1 justify-between gap-2 sm:gap-3">
         <div>
           <div className="flex items-center justify-between text-xs text-zinc-400 mb-1">
-            <span className="uppercase tracking-widest text-[10px] text-gold-400/90 font-medium">
+            <span className="uppercase tracking-widest text-[9px] sm:text-[10px] text-gold-400/90 font-medium truncate">
               {product.category}
             </span>
-            <div className="flex items-center gap-1 text-[11px] font-semibold text-zinc-300 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
-              <Star className="w-3 h-3 text-gold-400 fill-gold-400" />
+            <div className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-[11px] font-semibold text-zinc-300 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800 shrink-0">
+              <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gold-400 fill-gold-400" />
               <span>{product.rating}</span>
-              <span className="text-zinc-500">({product.reviewCount})</span>
+              <span className="text-zinc-500 hidden sm:inline">({product.reviewCount})</span>
             </div>
           </div>
 
           <Link href={`/product/${product.slug}`} className="block group/title">
-            <h3 className="font-display font-medium text-sm text-zinc-100 line-clamp-1 group-hover/title:text-gold-400 transition-colors">
+            <h3 className="font-display font-medium text-xs sm:text-sm text-zinc-100 line-clamp-2 sm:line-clamp-1 group-hover/title:text-gold-400 transition-colors leading-snug">
               {product.name}
             </h3>
           </Link>
@@ -172,12 +172,12 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Pricing + Mobile Add Button */}
         <div className="flex items-center justify-between pt-1 border-t border-zinc-900">
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono font-bold text-base text-white">
+          <div className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-2">
+            <span className="font-mono font-bold text-sm sm:text-base text-white">
               {formatPrice(displayPrice)}
             </span>
             {originalPrice && (
-              <span className="font-mono text-xs text-zinc-500 line-through">
+              <span className="font-mono text-[10px] sm:text-xs text-zinc-500 line-through">
                 {formatPrice(originalPrice)}
               </span>
             )}
@@ -186,10 +186,10 @@ export default function ProductCard({ product }: ProductCardProps) {
           {/* Mobile direct add icon */}
           <button
             onClick={handleQuickAdd}
-            className="sm:hidden p-2 rounded-xl bg-gold-400 text-black active:scale-95 transition-transform"
+            className="sm:hidden p-2 rounded-xl bg-gold-400 text-black active:scale-95 transition-transform shrink-0"
             aria-label="Add to cart"
           >
-            {isAdded ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
+            {isAdded ? <Check className="w-3.5 h-3.5" /> : <ShoppingBag className="w-3.5 h-3.5" />}
           </button>
         </div>
       </div>

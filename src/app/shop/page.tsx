@@ -14,17 +14,23 @@ import {
   Grid3X3
 } from 'lucide-react';
 import ProductCard from '@/components/product/ProductCard';
-import { SAMPLE_PRODUCTS, CATEGORIES } from '@/lib/products-data';
-import { Product } from '@/lib/types';
+import { SAMPLE_PRODUCTS, CATEGORIES, getProductsData, getCategoriesData } from '@/lib/products-data';
+import { Product, Category } from '@/lib/types';
 import { formatPrice } from '@/lib/utils';
 
 function ShopContent() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category') || 'all';
+  const initialSubcategory = searchParams.get('subcategory') || 'all';
   const initialSearch = searchParams.get('search') || '';
+
+  // Data states
+  const [productsList, setProductsList] = useState<Product[]>(SAMPLE_PRODUCTS);
+  const [categoriesList, setCategoriesList] = useState<Category[]>(CATEGORIES);
 
   // Filter States
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [selectedSubcategory, setSelectedSubcategory] = useState(initialSubcategory);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [sortBy, setSortBy] = useState('featured');
   const [priceRange, setPriceRange] = useState<number>(20000);
@@ -34,30 +40,59 @@ function ShopContent() {
   const [visibleCount, setVisibleCount] = useState(8);
   const [gridColumns, setGridColumns] = useState<'normal' | 'dense'>('normal');
 
+  useEffect(() => {
+    setProductsList(getProductsData());
+    setCategoriesList(getCategoriesData());
+
+    const handleUpdate = () => {
+      setProductsList(getProductsData());
+      setCategoriesList(getCategoriesData());
+    };
+
+    window.addEventListener('categories-updated', handleUpdate);
+    window.addEventListener('products-updated', handleUpdate);
+    return () => {
+      window.removeEventListener('categories-updated', handleUpdate);
+      window.removeEventListener('products-updated', handleUpdate);
+    };
+  }, []);
+
   // Sync category or search from URL if changed
   useEffect(() => {
     if (searchParams.get('category')) {
       setSelectedCategory(searchParams.get('category') || 'all');
+    }
+    if (searchParams.get('subcategory')) {
+      setSelectedSubcategory(searchParams.get('subcategory') || 'all');
     }
     if (searchParams.get('search') !== null) {
       setSearchQuery(searchParams.get('search') || '');
     }
   }, [searchParams]);
 
+  // When selectedCategory changes, reset subcategory if it belongs to different category
+  const activeCategoryObj = categoriesList.find((c) => c.slug === selectedCategory);
+  const currentSubcategories = activeCategoryObj?.subcategories || [];
+
   // Available Sizes across all products
   const allSizes = useMemo(() => {
     const set = new Set<string>();
-    SAMPLE_PRODUCTS.forEach((p) => {
+    productsList.forEach((p) => {
       p.sizes.forEach((s) => set.add(s));
     });
     return Array.from(set);
-  }, []);
+  }, [productsList]);
 
   // Filtered Products
   const filteredProducts = useMemo(() => {
-    return SAMPLE_PRODUCTS.filter((product) => {
+    return productsList.filter((product) => {
       // Category filter
       if (selectedCategory !== 'all' && product.category !== selectedCategory) {
+        return false;
+      }
+
+      // Subcategory filter
+      if (selectedSubcategory !== 'all' && product.subcategory !== selectedSubcategory) {
         return false;
       }
 
@@ -67,7 +102,8 @@ function ShopContent() {
         const matchesName = product.name.toLowerCase().includes(query);
         const matchesDesc = product.description.toLowerCase().includes(query);
         const matchesCat = product.category.toLowerCase().includes(query);
-        if (!matchesName && !matchesDesc && !matchesCat) return false;
+        const matchesSub = product.subcategory?.toLowerCase().includes(query);
+        if (!matchesName && !matchesDesc && !matchesCat && !matchesSub) return false;
       }
 
       // Price filter
@@ -102,13 +138,14 @@ function ShopContent() {
       // default: featured
       return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
     });
-  }, [selectedCategory, searchQuery, sortBy, priceRange, selectedSize, inStockOnly]);
+  }, [productsList, selectedCategory, selectedSubcategory, searchQuery, sortBy, priceRange, selectedSize, inStockOnly]);
 
   const displayedProducts = filteredProducts.slice(0, visibleCount);
   const hasMore = visibleCount < filteredProducts.length;
 
   const handleResetFilters = () => {
     setSelectedCategory('all');
+    setSelectedSubcategory('all');
     setSearchQuery('');
     setSortBy('featured');
     setPriceRange(20000);
@@ -118,6 +155,7 @@ function ShopContent() {
 
   const hasActiveFilters =
     selectedCategory !== 'all' ||
+    selectedSubcategory !== 'all' ||
     searchQuery !== '' ||
     priceRange < 20000 ||
     selectedSize !== 'all' ||
@@ -248,7 +286,10 @@ function ShopContent() {
                 Category
               </label>
               <button
-                onClick={() => setSelectedCategory('all')}
+                onClick={() => {
+                  setSelectedCategory('all');
+                  setSelectedSubcategory('all');
+                }}
                 className={`w-full text-left text-xs px-3 py-2 rounded-xl transition-colors flex items-center justify-between ${
                   selectedCategory === 'all'
                     ? 'bg-gold-400 text-black font-bold'
@@ -256,24 +297,59 @@ function ShopContent() {
                 }`}
               >
                 <span>All Collections</span>
-                <span className="font-mono text-[10px]">{SAMPLE_PRODUCTS.length}</span>
+                <span className="font-mono text-[10px]">{productsList.length}</span>
               </button>
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.slug)}
-                  className={`w-full text-left text-xs px-3 py-2 rounded-xl transition-colors flex items-center justify-between ${
-                    selectedCategory === cat.slug
-                      ? 'bg-gold-400 text-black font-bold'
-                      : 'text-zinc-300 hover:bg-zinc-800'
-                  }`}
-                >
-                  <span>{cat.name}</span>
-                  <span className="font-mono text-[10px]">
-                    {SAMPLE_PRODUCTS.filter((p) => p.category === cat.slug).length}
-                  </span>
-                </button>
-              ))}
+              {categoriesList.map((cat) => {
+                const isCatActive = selectedCategory === cat.slug;
+                const catCount = productsList.filter((p) => p.category === cat.slug).length;
+                return (
+                  <div key={cat.id} className="space-y-1">
+                    <button
+                      onClick={() => {
+                        setSelectedCategory(cat.slug);
+                        setSelectedSubcategory('all');
+                      }}
+                      className={`w-full text-left text-xs px-3 py-2 rounded-xl transition-colors flex items-center justify-between ${
+                        isCatActive
+                          ? 'bg-gold-400 text-black font-bold'
+                          : 'text-zinc-300 hover:bg-zinc-800'
+                      }`}
+                    >
+                      <span>{cat.name}</span>
+                      <span className="font-mono text-[10px]">{catCount}</span>
+                    </button>
+
+                    {/* Subcategories under active category */}
+                    {isCatActive && cat.subcategories && cat.subcategories.length > 0 && (
+                      <div className="pl-3 py-1 space-y-1 border-l-2 border-gold-400/30 ml-2">
+                        <button
+                          onClick={() => setSelectedSubcategory('all')}
+                          className={`w-full text-left text-[11px] px-2 py-1 rounded-lg transition-colors flex items-center justify-between ${
+                            selectedSubcategory === 'all'
+                              ? 'text-gold-400 font-bold bg-zinc-800/80'
+                              : 'text-zinc-400 hover:text-white'
+                          }`}
+                        >
+                          <span>All {cat.name}</span>
+                        </button>
+                        {cat.subcategories.map((sub) => (
+                          <button
+                            key={sub.id}
+                            onClick={() => setSelectedSubcategory(sub.slug)}
+                            className={`w-full text-left text-[11px] px-2 py-1 rounded-lg transition-colors flex items-center justify-between ${
+                              selectedSubcategory === sub.slug
+                                ? 'text-gold-400 font-bold bg-zinc-800/80'
+                                : 'text-zinc-400 hover:text-white'
+                            }`}
+                          >
+                            <span>{sub.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Price Range Slider */}
@@ -345,6 +421,35 @@ function ShopContent() {
 
           {/* Product Grid Area */}
           <div className="lg:col-span-3 space-y-6">
+            {/* Horizontal Subcategory Pill Bar */}
+            {currentSubcategories.length > 0 && (
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                <button
+                  onClick={() => setSelectedSubcategory('all')}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+                    selectedSubcategory === 'all'
+                      ? 'bg-gold-400 text-black shadow-md'
+                      : 'bg-zinc-900 text-zinc-300 border border-zinc-800 hover:border-zinc-700'
+                  }`}
+                >
+                  All {activeCategoryObj?.name || 'Items'}
+                </button>
+                {currentSubcategories.map((sub) => (
+                  <button
+                    key={sub.id}
+                    onClick={() => setSelectedSubcategory(sub.slug)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+                      selectedSubcategory === sub.slug
+                        ? 'bg-gold-400 text-black shadow-md'
+                        : 'bg-zinc-900 text-zinc-300 border border-zinc-800 hover:border-zinc-700'
+                    }`}
+                  >
+                    {sub.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Results Count & Active Filter Pills */}
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-400">
               <span>
@@ -357,7 +462,15 @@ function ShopContent() {
                   {selectedCategory !== 'all' && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-200 text-[11px]">
                       Category: {selectedCategory}
-                      <button onClick={() => setSelectedCategory('all')}>
+                      <button onClick={() => { setSelectedCategory('all'); setSelectedSubcategory('all'); }}>
+                        <X className="w-3 h-3 hover:text-white" />
+                      </button>
+                    </span>
+                  )}
+                  {selectedSubcategory !== 'all' && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gold-400/20 border border-gold-400/40 text-gold-300 text-[11px]">
+                      Subcategory: {selectedSubcategory}
+                      <button onClick={() => setSelectedSubcategory('all')}>
                         <X className="w-3 h-3 hover:text-white" />
                       </button>
                     </span>
@@ -398,10 +511,10 @@ function ShopContent() {
               </div>
             ) : (
               <div
-                className={`grid gap-6 ${
+                className={`grid gap-3 sm:gap-6 ${
                   gridColumns === 'dense'
                     ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
-                    : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                    : 'grid-cols-2 lg:grid-cols-3'
                 }`}
               >
                 {displayedProducts.map((product) => (
@@ -460,7 +573,10 @@ function ShopContent() {
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => setSelectedCategory('all')}
+                    onClick={() => {
+                      setSelectedCategory('all');
+                      setSelectedSubcategory('all');
+                    }}
                     className={`py-2 px-3 rounded-xl text-xs font-semibold text-left ${
                       selectedCategory === 'all'
                         ? 'bg-gold-400 text-black'
@@ -469,10 +585,13 @@ function ShopContent() {
                   >
                     All Collections
                   </button>
-                  {CATEGORIES.map((c) => (
+                  {categoriesList.map((c) => (
                     <button
                       key={c.id}
-                      onClick={() => setSelectedCategory(c.slug)}
+                      onClick={() => {
+                        setSelectedCategory(c.slug);
+                        setSelectedSubcategory('all');
+                      }}
                       className={`py-2 px-3 rounded-xl text-xs font-semibold text-left ${
                         selectedCategory === c.slug
                           ? 'bg-gold-400 text-black'
@@ -483,6 +602,40 @@ function ShopContent() {
                     </button>
                   ))}
                 </div>
+
+                {/* Mobile Subcategories if selected */}
+                {currentSubcategories.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-zinc-800/80">
+                    <label className="text-[11px] font-mono uppercase tracking-wider text-gold-400 block mb-2">
+                      Subcategories
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        onClick={() => setSelectedSubcategory('all')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
+                          selectedSubcategory === 'all'
+                            ? 'bg-gold-400 text-black font-bold'
+                            : 'bg-zinc-900 text-zinc-300 border border-zinc-800'
+                        }`}
+                      >
+                        All
+                      </button>
+                      {currentSubcategories.map((sub) => (
+                        <button
+                          key={sub.id}
+                          onClick={() => setSelectedSubcategory(sub.slug)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
+                            selectedSubcategory === sub.slug
+                              ? 'bg-gold-400 text-black font-bold'
+                              : 'bg-zinc-900 text-zinc-300 border border-zinc-800'
+                          }`}
+                        >
+                          {sub.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Mobile Price */}

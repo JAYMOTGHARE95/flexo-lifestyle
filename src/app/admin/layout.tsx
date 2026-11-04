@@ -13,7 +13,9 @@ import {
   ShieldCheck,
   Menu,
   X,
-  Lock
+  Lock,
+  QrCode,
+  Settings
 } from 'lucide-react';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
@@ -88,7 +90,8 @@ export default function AdminLayout({
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Orders & Payments', href: '/admin/orders', icon: ShoppingBag },
     { name: 'Products Catalog', href: '/admin/products', icon: Layers },
-    { name: 'Categories', href: '/admin/categories', icon: FolderTree },
+    { name: 'Categories & Subcategories', href: '/admin/categories', icon: FolderTree },
+    { name: 'WhatsApp & Settings', href: '/admin/settings', icon: QrCode },
   ];
 
   return (

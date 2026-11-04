@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.categories (
     slug TEXT NOT NULL UNIQUE,
     description TEXT,
     image TEXT NOT NULL,
+    subcategories JSONB NOT NULL DEFAULT '[]'::jsonb,
     item_count INT DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -24,6 +25,7 @@ CREATE TABLE IF NOT EXISTS public.products (
     slug TEXT NOT NULL UNIQUE,
     description TEXT NOT NULL,
     category TEXT NOT NULL REFERENCES public.categories(slug) ON UPDATE CASCADE ON DELETE RESTRICT,
+    subcategory TEXT,
     price NUMERIC(10, 2) NOT NULL,
     discount_price NUMERIC(10, 2),
     images TEXT[] NOT NULL DEFAULT '{}',

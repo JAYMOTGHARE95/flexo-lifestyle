@@ -276,7 +276,7 @@ export default function ProductDetailClient({
                 className="w-full py-3.5 rounded-2xl bg-emerald-600/15 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 font-semibold text-xs tracking-wide transition-all flex items-center justify-center gap-2 group"
               >
                 <MessageCircle className="w-4 h-4 text-emerald-400 group-hover:text-white transition-colors" />
-                <span>Order / Inquire on WhatsApp Directly</span>
+                <span>WhatsApp Help & Quick Order</span>
               </button>
             </div>
 
@@ -287,8 +287,8 @@ export default function ProductDetailClient({
                 <span>Free Express Shipping</span>
               </div>
               <div className="p-2.5 rounded-xl bg-zinc-900/40 border border-zinc-855">
-                <RotateCcw className="w-4 h-4 text-gold-400 mx-auto mb-1" />
-                <span>7-Day Replacement</span>
+                <MessageCircle className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
+                <span>WhatsApp Help</span>
               </div>
               <div className="p-2.5 rounded-xl bg-zinc-900/40 border border-zinc-855">
                 <ShieldCheck className="w-4 h-4 text-gold-400 mx-auto mb-1" />
@@ -452,7 +452,7 @@ export default function ProductDetailClient({
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {relatedProducts.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

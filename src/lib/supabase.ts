@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
-import { SAMPLE_PRODUCTS, CATEGORIES } from './products-data';
+import { SAMPLE_PRODUCTS, CATEGORIES, getCategoriesData, getProductsData, saveLocalProducts } from './products-data';
 import { Order, Product, Category } from './types';
+
+export { saveLocalProducts };
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -89,7 +91,8 @@ export async function getProducts(options?: {
   }
 
   // Fallback to local mock data
-  let result = [...localProductsCache].filter((p) => p.isActive);
+  const currentCatalog = typeof window !== 'undefined' ? getProductsData() : localProductsCache;
+  let result = [...currentCatalog].filter((p) => p.isActive);
 
   if (options?.category && options.category !== 'all') {
     result = result.filter((p) => p.category === options.category);
@@ -164,12 +167,38 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     }
   }
 
-  const found = localProductsCache.find((p) => p.slug === slug);
+  const currentCatalog = typeof window !== 'undefined' ? getProductsData() : localProductsCache;
+  const found = currentCatalog.find((p) => p.slug === slug);
   return found || null;
 }
 
 export async function getCategories(): Promise<Category[]> {
-  return CATEGORIES;
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data, error } = await supabase.from('categories').select('*').order('name');
+      if (!error && data && data.length > 0) {
+        return data.map((c) => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          description: c.description || '',
+          image: c.image || '',
+          subcategories: c.subcategories || [],
+          itemCount: c.item_count || 0,
+        }));
+      }
+    } catch (e) {
+      console.warn('Fallback getCategories:', e);
+    }
+  }
+  return getCategoriesData();
+}
+
+export function saveLocalCategories(cats: Category[]) {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('flexo_categories_v2', JSON.stringify(cats));
+    window.dispatchEvent(new Event('categories-updated'));
+  }
 }
 
 // ORDER DATA ACCESSORS

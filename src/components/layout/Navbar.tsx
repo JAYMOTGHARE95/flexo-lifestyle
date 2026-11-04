@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { SAMPLE_PRODUCTS } from '@/lib/products-data';
+import { getSiteSettings } from '@/lib/site-settings';
+import { SiteSettings } from '@/lib/types';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -25,9 +27,16 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [settings, setSettings] = useState<SiteSettings>(getSiteSettings());
 
-  const brandName = process.env.NEXT_PUBLIC_BRAND_NAME || 'FLEXO LIFESTYLE';
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '919876543210';
+  useEffect(() => {
+    const handleUpdate = () => setSettings(getSiteSettings());
+    window.addEventListener('site-settings-changed', handleUpdate);
+    return () => window.removeEventListener('site-settings-changed', handleUpdate);
+  }, []);
+
+  const brandName = settings.brandName || 'FLEXO LIFESTYLE';
+  const whatsappNumber = settings.whatsappNumber || '919876543210';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,22 +63,23 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Home', href: '/' },
     { name: 'Shop All', href: '/shop' },
-    { name: 'Clothing', href: '/shop?category=clothing' },
+    { name: 'Clothing', href: '/shop?category=fashion-clothing' },
+    { name: 'Footwear', href: '/shop?category=footwear' },
     { name: 'Watches', href: '/shop?category=watches' },
-    { name: 'Shoes', href: '/shop?category=shoes' },
-    { name: 'Accessories', href: '/shop?category=accessories' },
-    { name: 'Lifestyle', href: '/shop?category=lifestyle' },
+    { name: 'Gadgets', href: '/shop?category=electronics-gadgets' },
+    { name: 'Accessories', href: '/shop?category=fashion-accessories' },
+    { name: 'Lifestyle', href: '/shop?category=home-lifestyle' },
   ];
 
   return (
     <>
-      {/* Top Flipkart-style Announcement Bar */}
+      {/* Top Announcement Bar */}
       <div className="bg-zinc-950 border-b border-zinc-800 text-[11px] sm:text-xs text-zinc-300 py-1.5 px-4 tracking-wider uppercase">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="font-medium text-zinc-200">
-              ⚡ Launch Special: Flat 10% OFF with code <strong className="text-gold-400">FLEXO10</strong>
+              {settings.announcementText} <strong className="text-gold-400">{settings.announcementCoupon}</strong>
             </span>
           </div>
           <div className="hidden md:flex items-center gap-6">
@@ -77,8 +87,18 @@ export default function Navbar() {
               <Truck className="w-3.5 h-3.5 text-gold-400" />
               <span>Track Order</span>
             </Link>
+            {settings.whatsappGroupLink && (
+              <a 
+                href={settings.whatsappGroupLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-emerald-400 flex items-center gap-1 transition-colors text-[11px] font-semibold text-emerald-400/90"
+              >
+                <span>Join WhatsApp Community</span>
+              </a>
+            )}
             <a 
-              href={`https://wa.me/${whatsappNumber}?text=Hi%20Flexo%20Lifestyle%2C%20I%20have%20a%20question%20about%20your%20products`}
+              href={`https://wa.me/${whatsappNumber}?text=Hi%20${encodeURIComponent(brandName)}%2C%20I%20have%20a%20question`}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-emerald-400 flex items-center gap-1 transition-colors"
@@ -86,10 +106,6 @@ export default function Navbar() {
               <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
               <span>WhatsApp Help</span>
             </a>
-            <Link href="/admin" className="text-zinc-400 hover:text-white flex items-center gap-1 transition-colors">
-              <User className="w-3 h-3" />
-              <span>Admin</span>
-            </Link>
           </div>
         </div>
       </div>
@@ -200,8 +216,8 @@ export default function Navbar() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search for clothing, chronograph watches, sneakers, accessories..."
-                    className="w-full bg-zinc-900/90 border border-zinc-700/80 rounded-full pl-10 pr-10 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400 transition-all"
+                    placeholder="Search clothing, watches, sneakers, accessories..."
+                    className="w-full bg-zinc-900/90 border border-zinc-700/80 rounded-full pl-10 pr-10 py-2.5 text-base sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400 transition-all"
                     autoFocus
                   />
                   {searchQuery && (
@@ -305,13 +321,17 @@ export default function Navbar() {
                       <Truck className="w-4 h-4 text-gold-400" />
                       <span>Track Your Order</span>
                     </Link>
-                    <Link
-                      href="/admin"
-                      className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white"
-                    >
-                      <User className="w-4 h-4 text-gold-400" />
-                      <span>Admin Dashboard</span>
-                    </Link>
+                    {settings.whatsappGroupLink && (
+                      <a
+                        href={settings.whatsappGroupLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-sm text-emerald-400 hover:text-emerald-300"
+                      >
+                        <MessageCircle className="w-4 h-4 text-emerald-400" />
+                        <span>Join WhatsApp Community</span>
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>

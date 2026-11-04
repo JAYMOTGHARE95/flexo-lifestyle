@@ -33,12 +33,12 @@ export default function Footer() {
             </div>
 
             <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-gold-400/10 border border-gold-400/20 flex items-center justify-center text-gold-400 shrink-0">
-                <RotateCcw className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                <MessageCircle className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-white">7-Day Hassle-Free</h4>
-                <p className="text-xs text-zinc-500">Easy exchange & return</p>
+                <h4 className="text-sm font-semibold text-white">WhatsApp Help</h4>
+                <p className="text-xs text-zinc-500">Fast dedicated assistance</p>
               </div>
             </div>
 
@@ -74,6 +74,9 @@ export default function Footer() {
               {brandName}
               <span className="text-gold-400">.</span>
             </Link>
+            <p className="text-xs font-mono uppercase tracking-widest text-gold-400 font-bold">
+              Wear it. Flaunt it. Flex it.
+            </p>
             <p className="text-sm text-zinc-400 max-w-sm leading-relaxed">
               Elevating daily living through precision craftsmanship, contemporary streetwear tailoring, and timeless horology. Designed for those who value understated luxury.
             </p>
@@ -85,7 +88,7 @@ export default function Footer() {
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all text-xs font-semibold"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>Instant WhatsApp Concierge</span>
+                <span>WhatsApp Help</span>
                 <ArrowUpRight className="w-3.5 h-3.5" />
               </a>
             </div>
@@ -96,8 +99,13 @@ export default function Footer() {
             <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-200">Collections</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/shop?category=clothing" className="hover:text-gold-400 transition-colors">
-                  Clothing & Streetwear
+                <Link href="/shop?category=fashion-clothing" className="hover:text-gold-400 transition-colors">
+                  Fashion & Clothing
+                </Link>
+              </li>
+              <li>
+                <Link href="/shop?category=footwear" className="hover:text-gold-400 transition-colors">
+                  Footwear & Sneakers
                 </Link>
               </li>
               <li>
@@ -106,18 +114,23 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/shop?category=shoes" className="hover:text-gold-400 transition-colors">
-                  Footwear & Sneakers
+                <Link href="/shop?category=electronics-gadgets" className="hover:text-gold-400 transition-colors">
+                  Electronics & Gadgets
                 </Link>
               </li>
               <li>
-                <Link href="/shop?category=accessories" className="hover:text-gold-400 transition-colors">
-                  Leather & Eyewear
+                <Link href="/shop?category=fashion-accessories" className="hover:text-gold-400 transition-colors">
+                  Fashion Accessories
                 </Link>
               </li>
               <li>
-                <Link href="/shop?category=lifestyle" className="hover:text-gold-400 transition-colors">
-                  Lifestyle Goods
+                <Link href="/shop?category=personal-care" className="hover:text-gold-400 transition-colors">
+                  Personal Care
+                </Link>
+              </li>
+              <li>
+                <Link href="/shop?category=home-lifestyle" className="hover:text-gold-400 transition-colors">
+                  Home & Lifestyle
                 </Link>
               </li>
             </ul>
@@ -138,18 +151,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/shipping#returns" className="hover:text-gold-400 transition-colors">
-                  Returns & Exchange
-                </Link>
-              </li>
-              <li>
                 <Link href="/contact" className="hover:text-gold-400 transition-colors">
                   Contact Support
-                </Link>
-              </li>
-              <li>
-                <Link href="/admin" className="text-zinc-500 hover:text-zinc-300 transition-colors">
-                  Merchant Admin
                 </Link>
               </li>
             </ul>

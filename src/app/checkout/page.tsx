@@ -186,10 +186,11 @@ export default function CheckoutPage() {
                   <input
                     type="text"
                     required
+                    autoComplete="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g. Aarav Sharma"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-base sm:text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400"
                   />
                 </div>
 
@@ -201,12 +202,14 @@ export default function CheckoutPage() {
                     type="tel"
                     required
                     maxLength={10}
+                    inputMode="tel"
+                    autoComplete="tel"
                     value={formData.phone}
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })
                     }
                     placeholder="10-digit mobile number"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400 font-mono"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-base sm:text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400 font-mono"
                   />
                 </div>
 
@@ -217,10 +220,12 @@ export default function CheckoutPage() {
                   <input
                     type="email"
                     required
+                    inputMode="email"
+                    autoComplete="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="aarav@example.com"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-base sm:text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400"
                   />
                 </div>
 
@@ -231,10 +236,11 @@ export default function CheckoutPage() {
                   <textarea
                     required
                     rows={2}
+                    autoComplete="street-address"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     placeholder="e.g. Flat 402, Highline Sky Towers, 14th Main, Indiranagar"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400 resize-none"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-base sm:text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400 resize-none"
                   />
                 </div>
 
@@ -246,12 +252,14 @@ export default function CheckoutPage() {
                     type="text"
                     required
                     maxLength={6}
+                    inputMode="numeric"
+                    autoComplete="postal-code"
                     value={formData.pincode}
                     onChange={(e) =>
                       setFormData({ ...formData, pincode: e.target.value.replace(/\D/g, '') })
                     }
                     placeholder="e.g. 560038"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400 font-mono"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-base sm:text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400 font-mono"
                   />
                 </div>
 
@@ -262,10 +270,11 @@ export default function CheckoutPage() {
                   <input
                     type="text"
                     required
+                    autoComplete="address-level2"
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                     placeholder="e.g. Bengaluru"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-base sm:text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400"
                   />
                 </div>
 
@@ -276,10 +285,11 @@ export default function CheckoutPage() {
                   <input
                     type="text"
                     required
+                    autoComplete="address-level1"
                     value={formData.state}
                     onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                     placeholder="e.g. Karnataka"
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-base sm:text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400"
                   />
                 </div>
               </div>
@@ -410,11 +420,12 @@ export default function CheckoutPage() {
                       <input
                         type="text"
                         required
+                        inputMode="numeric"
                         value={upiUtr}
                         onChange={(e) => setUpiUtr(e.target.value.replace(/\D/g, ''))}
                         maxLength={16}
                         placeholder="e.g. 429182740192"
-                        className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 font-mono focus:outline-none focus:border-gold-400"
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2.5 text-base sm:text-xs text-white placeholder-zinc-500 font-mono focus:outline-none focus:border-gold-400"
                       />
                       <p className="text-[11px] text-zinc-500">
                         Order status will be set to &quot;Payment pending verification&quot; until verified by merchant in admin panel.

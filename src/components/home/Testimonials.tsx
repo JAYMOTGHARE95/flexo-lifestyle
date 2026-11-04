@@ -102,17 +102,17 @@ export default function Testimonials() {
           ))}
         </div>
 
-        {/* Newsletter & WhatsApp VIP Drop Signup */}
+        {/* Newsletter & WhatsApp Community Drop Signup */}
         <div className="relative rounded-3xl bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-850 border border-gold-500/30 p-8 sm:p-12 overflow-hidden shadow-2xl">
           <div className="max-w-3xl mx-auto text-center space-y-4">
             <span className="inline-block px-3 py-1 rounded-full bg-gold-400/10 text-gold-400 border border-gold-400/20 text-[10px] font-mono uppercase tracking-widest font-bold">
-              VIP ACCESS
+              COMMUNITY ACCESS
             </span>
             <h3 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight">
               NEVER MISS A LIMITED RUN RELEASE
             </h3>
             <p className="text-xs sm:text-sm text-zinc-400 max-w-xl mx-auto leading-relaxed">
-              Join the private circle. Receive private drop notifications, secret coupon codes, and priority concierge access directly on your phone or inbox.
+              Stay in the loop. Receive drop notifications, secret coupon codes, and priority updates directly on your phone or inbox.
             </p>
 
             <form onSubmit={handleSubscribe} className="max-w-md mx-auto pt-4 flex flex-col sm:flex-row gap-2">
@@ -135,23 +135,23 @@ export default function Testimonials() {
                   </>
                 ) : (
                   <>
-                    <span>Join VIP</span>
+                    <span>Join Community</span>
                     <Send className="w-3.5 h-3.5" />
                   </>
                 )}
               </button>
             </form>
 
-            {/* Direct WhatsApp VIP option */}
+            {/* Direct WhatsApp Community option */}
             <div className="pt-3">
               <a
-                href={`https://wa.me/${whatsappNumber}?text=Hi%20Flexo%2C%20please%20add%20me%20to%20the%20VIP%20drop%20broadcast`}
+                href={`https://wa.me/${whatsappNumber}?text=Hi%20Flexo%2C%20please%20add%20me%20to%20the%20WhatsApp%20community`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-medium"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
-                <span>Or join our WhatsApp VIP broadcast club &rarr;</span>
+                <span>Join our WhatsApp community &rarr;</span>
               </a>
             </div>
           </div>

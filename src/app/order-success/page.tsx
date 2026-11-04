@@ -199,7 +199,7 @@ function OrderSuccessContent() {
             href="/shop"
             className="text-xs text-zinc-500 hover:text-gold-400 transition-colors inline-flex items-center gap-1.5"
           >
-            <span>&larr; Return to Shopping Catalogue</span>
+            <span>&larr; Back to Shopping Catalogue</span>
           </Link>
         </div>
       </div>
