@@ -28,15 +28,23 @@ export default function AdminLoginPage() {
     setErrorMsg(null);
     setIsLoading(true);
 
-    const trimmedPass = password.trim().toLowerCase();
-    const isMasterPass = 
-      trimmedPass === 'admin123' || 
-      trimmedPass === 'flexoowner' || 
-      trimmedPass === 'admin' || 
-      trimmedPass === 'flexo2026' ||
-      trimmedPass === '123456';
+    const inputPass = password.trim();
+    const inputPassLower = inputPass.toLowerCase();
 
-    // 1. If master passcode is used, grant access immediately!
+    // Custom password from Admin Settings (localStorage)
+    const customPass = typeof window !== 'undefined' ? localStorage.getItem('flexo_admin_custom_password') : null;
+    const envPass = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+
+    const isMasterPass = 
+      (customPass && inputPass === customPass) ||
+      (envPass && inputPass === envPass) ||
+      inputPassLower === 'admin123' || 
+      inputPassLower === 'flexoowner' || 
+      inputPassLower === 'admin' || 
+      inputPassLower === 'flexo2026' ||
+      inputPassLower === '123456';
+
+    // 1. If custom or master passcode is used, grant access immediately!
     if (isMasterPass) {
       grantAccess();
       return;

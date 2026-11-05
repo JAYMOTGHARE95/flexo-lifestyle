@@ -12,7 +12,9 @@ import {
   CreditCard,
   Save,
   Tag,
-  Truck
+  Truck,
+  Lock,
+  KeyRound
 } from 'lucide-react';
 import { getSiteSettings, updateSiteSettings } from '@/lib/site-settings';
 import { SiteSettings } from '@/lib/types';
@@ -21,10 +23,31 @@ export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<SiteSettings>(getSiteSettings());
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [qrUploadPreview, setQrUploadPreview] = useState<string>('');
+  const [customPassword, setCustomPassword] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   useEffect(() => {
     setSettings(getSiteSettings());
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('flexo_admin_custom_password');
+      if (stored) {
+        setCustomPassword(stored);
+      }
+    }
   }, []);
+
+  const handleUpdatePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customPassword.trim()) {
+      alert('Password cannot be empty');
+      return;
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('flexo_admin_custom_password', customPassword.trim());
+      setPasswordSuccess(true);
+      setTimeout(() => setPasswordSuccess(false), 3000);
+    }
+  };
 
   const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -338,6 +361,56 @@ export default function AdminSettingsPage() {
               />
             </div>
           </div>
+        </div>
+
+        {/* Admin Password Management Section */}
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-zinc-800">
+            <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-display font-bold text-lg text-white">Admin Security & Password</h2>
+              <p className="text-xs text-zinc-400">Set your personal owner passcode to access the /admin panel.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+                <KeyRound className="w-3.5 h-3.5 text-gold-400" />
+                <span>Your New Custom Admin Password</span>
+              </label>
+              <input
+                type="text"
+                value={customPassword}
+                onChange={(e) => setCustomPassword(e.target.value)}
+                placeholder="Type your new password here (e.g. MyBrand@2026)"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:border-gold-400 focus:outline-none"
+              />
+              <p className="text-[11px] text-zinc-500">
+                Default fallback passcode: <code className="text-gold-400">admin123</code> (always works as backup).
+              </p>
+            </div>
+
+            <div>
+              <button
+                type="button"
+                onClick={handleUpdatePassword}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 font-semibold text-xs transition-colors flex items-center justify-center gap-2"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>Update Admin Password</span>
+              </button>
+            </div>
+          </div>
+
+          {passwordSuccess && (
+            <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center gap-2 animate-fade-in">
+              <Check className="w-4 h-4" />
+              <span>Password successfully updated! You can now use this password to log in.</span>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
