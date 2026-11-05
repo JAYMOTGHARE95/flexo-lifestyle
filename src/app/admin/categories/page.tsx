@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   FolderTree, 
   Plus, 
@@ -12,17 +12,23 @@ import {
   Layers, 
   AlertCircle,
   Save,
-  RotateCcw
+  RotateCcw,
+  Upload,
+  Image as ImageIcon,
+  Loader2
 } from 'lucide-react';
 import { getCategoriesData, INITIAL_CATEGORIES } from '@/lib/products-data';
 import { saveLocalCategories } from '@/lib/supabase';
 import { Category, Subcategory } from '@/lib/types';
+import { uploadSingleImage } from '@/lib/upload-helper';
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Quick subcategory adder states: { [categoryId]: string }
   const [newSubcategoryInputs, setNewSubcategoryInputs] = useState<{ [key: string]: string }>({});
@@ -56,7 +62,7 @@ export default function AdminCategoriesPage() {
       name: '',
       slug: '',
       description: '',
-      image: 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=800&q=80',
+      image: '',
       initialSubcategories: 'Oversized Tees, Heavyweight Hoodies, Cargoes',
     });
     setIsModalOpen(true);
@@ -72,6 +78,22 @@ export default function AdminCategoriesPage() {
       initialSubcategories: (c.subcategories || []).map((s) => s.name).join(', '),
     });
     setIsModalOpen(true);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploading(true);
+      const url = await uploadSingleImage(file);
+      setFormData((prev) => ({ ...prev, image: url }));
+    } catch (err: any) {
+      alert('Failed to upload image: ' + (err?.message || 'Unknown error'));
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const handleDeleteCategory = (id: string, name: string) => {
@@ -135,6 +157,11 @@ export default function AdminCategoriesPage() {
   const handleSaveModal = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!formData.image) {
+      alert('Please upload a cover image for this category.');
+      return;
+    }
+
     const parsedSubs: Subcategory[] = formData.initialSubcategories
       .split(',')
       .map((s) => s.trim())
@@ -145,31 +172,37 @@ export default function AdminCategoriesPage() {
         slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       }));
 
+    const cleanSlug = (formData.slug || formData.name)
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+
     if (editingCategory) {
       const updated = categories.map((c) =>
         c.id === editingCategory.id
           ? {
               ...c,
               name: formData.name,
-              slug: formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+              slug: cleanSlug,
               description: formData.description,
               image: formData.image,
               subcategories: parsedSubs.length > 0 ? parsedSubs : c.subcategories || [],
             }
           : c
       );
-      persistCategories(updated, `Updated "${formData.name}" category.`);
+      persistCategories(updated, `Updated "${formData.name}" category. Live on site.`);
     } else {
       const newCat: Category = {
         id: `cat-${Date.now()}`,
         name: formData.name,
-        slug: formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        slug: cleanSlug,
         description: formData.description,
         image: formData.image,
         itemCount: 0,
         subcategories: parsedSubs,
       };
-      persistCategories([...categories, newCat], `Created "${formData.name}" category.`);
+      persistCategories([...categories, newCat], `Created "${formData.name}" category. Live on site.`);
     }
 
     setIsModalOpen(false);
@@ -206,7 +239,7 @@ export default function AdminCategoriesPage() {
             className="px-5 py-2.5 rounded-xl bg-gold-400 hover:bg-gold-300 text-black font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-lg"
           >
             <Plus className="w-4 h-4" />
-            <span>Add New Category</span>
+            <span>Create New Category</span>
           </button>
         </div>
       </div>
@@ -219,137 +252,125 @@ export default function AdminCategoriesPage() {
         </div>
       )}
 
-      {/* Categories Cards */}
+      {/* Categories Cards List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {categories.map((cat) => {
-          const subCount = cat.subcategories?.length || 0;
-          const currentInput = newSubcategoryInputs[cat.id] || '';
-
-          return (
-            <div
-              key={cat.id}
-              className="rounded-3xl bg-zinc-900/60 border border-zinc-800 overflow-hidden shadow-xl flex flex-col justify-between"
-            >
-              {/* Cover Image & Category Title Bar */}
-              <div className="relative aspect-[21/9] sm:aspect-[16/6] overflow-hidden bg-zinc-950">
-                <img
-                  src={cat.image}
-                  alt={cat.name}
-                  className="w-full h-full object-cover opacity-80"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
-                
-                <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
-                  <div>
-                    <span className="text-[10px] font-mono text-gold-400 uppercase tracking-widest font-bold">
-                      slug: {cat.slug}
-                    </span>
-                    <h3 className="font-display font-black text-xl text-white">
-                      {cat.name}
-                    </h3>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
+        {categories.map((cat) => (
+          <div
+            key={cat.id}
+            className="rounded-3xl bg-zinc-900/60 border border-zinc-800 p-6 flex flex-col justify-between space-y-5 hover:border-zinc-700 transition-colors shadow-lg"
+          >
+            {/* Top row: Info + Image */}
+            <div className="flex items-start gap-4">
+              <img
+                src={cat.image}
+                alt={cat.name}
+                className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-2xl border border-zinc-700 shrink-0"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-display font-bold text-lg text-white truncate">
+                    {cat.name}
+                  </h3>
+                  <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => handleOpenEdit(cat)}
-                      className="p-2 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 backdrop-blur-md transition-colors"
+                      className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition-colors"
                       title="Edit Category Details"
                     >
-                      <Edit className="w-3.5 h-3.5" />
+                      <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteCategory(cat.id, cat.name)}
-                      className="p-2 rounded-xl bg-zinc-900/80 hover:bg-rose-500/20 text-zinc-400 hover:text-rose-400 border border-zinc-700 backdrop-blur-md transition-colors"
+                      className="p-1.5 text-zinc-500 hover:text-rose-400 rounded-lg hover:bg-zinc-800 transition-colors"
                       title="Delete Category"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-              </div>
 
-              {/* Category Body */}
-              <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  {cat.description || 'No description provided.'}
+                <p className="text-[11px] font-mono text-gold-400 mt-0.5">
+                  slug: /{cat.slug}
                 </p>
-
-                {/* Subcategories Management Section */}
-                <div className="pt-3 border-t border-zinc-800/80 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 font-bold flex items-center gap-1.5">
-                      <Tag className="w-3 h-3 text-gold-400" />
-                      <span>Subcategories ({subCount})</span>
-                    </span>
-                    <span className="text-[10px] text-zinc-500">
-                      Click × to remove
-                    </span>
-                  </div>
-
-                  {/* Subcategory Pills */}
-                  <div className="flex flex-wrap gap-1.5 min-h-[32px]">
-                    {subCount > 0 ? (
-                      cat.subcategories?.map((sub) => (
-                        <span
-                          key={sub.id}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 group hover:border-gold-400/50 transition-colors"
-                        >
-                          <span className="font-medium">{sub.name}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteSubcategory(cat.id, sub.id, sub.name)}
-                            className="text-zinc-500 hover:text-rose-400 p-0.5 rounded transition-colors"
-                            title={`Remove ${sub.name}`}
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-xs text-zinc-500 italic">No subcategories yet. Add one below:</span>
-                    )}
-                  </div>
-
-                  {/* Quick Add Subcategory Form */}
-                  <div className="flex items-center gap-2 pt-1">
-                    <input
-                      type="text"
-                      value={currentInput}
-                      onChange={(e) =>
-                        setNewSubcategoryInputs({
-                          ...newSubcategoryInputs,
-                          [cat.id]: e.target.value,
-                        })
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddSubcategory(cat.id);
-                        }
-                      }}
-                      placeholder="New subcategory (e.g. Leather Wallets)..."
-                      className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleAddSubcategory(cat.id)}
-                      className="px-3 py-1.5 rounded-xl bg-gold-400/15 hover:bg-gold-400/25 border border-gold-400/30 text-gold-400 text-xs font-semibold flex items-center gap-1 transition-colors"
-                    >
-                      <Plus className="w-3 h-3" />
-                      <span>Add</span>
-                    </button>
-                  </div>
-                </div>
+                <p className="text-xs text-zinc-400 mt-2 line-clamp-2">
+                  {cat.description}
+                </p>
               </div>
             </div>
-          );
-        })}
+
+            {/* Subcategories Section */}
+            <div className="pt-4 border-t border-zinc-800/80 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-zinc-300 flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5 text-gold-400" />
+                  <span>Subcategories ({cat.subcategories?.length || 0})</span>
+                </span>
+                <span className="text-[10px] text-zinc-500 font-mono">
+                  Used for filters & menu tags
+                </span>
+              </div>
+
+              {/* Subcategories Badges */}
+              <div className="flex flex-wrap gap-2">
+                {cat.subcategories && cat.subcategories.length > 0 ? (
+                  cat.subcategories.map((sub) => (
+                    <span
+                      key={sub.id}
+                      className="group inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-zinc-300 hover:border-zinc-700"
+                    >
+                      <span>{sub.name}</span>
+                      <button
+                        onClick={() => handleDeleteSubcategory(cat.id, sub.id, sub.name)}
+                        className="text-zinc-600 group-hover:text-rose-400 p-0.5 hover:bg-zinc-800 rounded transition-colors"
+                        title={`Remove "${sub.name}"`}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-xs text-zinc-600 italic">No subcategories yet. Add one below.</span>
+                )}
+              </div>
+
+              {/* Add New Subcategory Input Form */}
+              <div className="flex items-center gap-2 pt-2">
+                <input
+                  type="text"
+                  placeholder="Add subcategory (e.g. Leather Wallets)..."
+                  value={newSubcategoryInputs[cat.id] || ''}
+                  onChange={(e) =>
+                    setNewSubcategoryInputs((prev) => ({
+                      ...prev,
+                      [cat.id]: e.target.value,
+                    }))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddSubcategory(cat.id);
+                    }
+                  }}
+                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleAddSubcategory(cat.id)}
+                  className="px-3 py-2 bg-zinc-800 hover:bg-gold-400 hover:text-black text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Add / Edit Category Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-zinc-950 border border-zinc-800 rounded-3xl w-full max-w-lg p-6 sm:p-8 space-y-6 shadow-2xl">
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-3xl w-full max-w-lg p-6 sm:p-8 space-y-6 shadow-2xl my-8">
             <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
               <h3 className="font-display font-bold text-lg text-white">
                 {editingCategory ? 'Edit Category' : 'Create New Category'}
@@ -379,24 +400,80 @@ export default function AdminCategoriesPage() {
                 <label className="font-semibold text-zinc-300 block mb-1">Slug (URL friendly) *</label>
                 <input
                   type="text"
-                  required
                   value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase() })}
-                  placeholder="e.g. footwear"
+                  placeholder="e.g. footwear (auto-generated if left blank)"
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-white font-mono focus:outline-none focus:border-gold-400"
                 />
               </div>
 
-              <div>
-                <label className="font-semibold text-zinc-300 block mb-1">Cover Image URL *</label>
+              {/* Direct Image Upload (NO URL option) */}
+              <div className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-3">
+                <label className="font-bold text-white flex items-center gap-1.5">
+                  <Upload className="w-4 h-4 text-gold-400" />
+                  <span>Category Cover Photo *</span>
+                </label>
+
+                {/* Hidden File Input */}
                 <input
-                  type="url"
-                  required
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-white font-mono text-[11px] focus:outline-none focus:border-gold-400"
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
                 />
+
+                {formData.image ? (
+                  <div className="relative rounded-2xl overflow-hidden border border-zinc-700 bg-zinc-950 aspect-[16/9] max-h-48 group">
+                    <img
+                      src={formData.image}
+                      alt="Category preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="px-3 py-1.5 rounded-xl bg-gold-400 text-black font-bold text-xs"
+                      >
+                        Change Photo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData((prev) => ({ ...prev, image: '' }))}
+                        className="px-3 py-1.5 rounded-xl bg-rose-600 text-white font-bold text-xs"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={isUploading}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full py-6 border-2 border-dashed border-zinc-700 hover:border-gold-400 rounded-2xl bg-zinc-950/60 hover:bg-zinc-900 flex flex-col items-center justify-center gap-2 text-zinc-300 transition-all cursor-pointer"
+                  >
+                    {isUploading ? (
+                      <div className="flex items-center gap-2 text-gold-400 font-semibold">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Uploading photo...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-300">
+                          <Upload className="w-5 h-5" />
+                        </div>
+                        <span className="font-bold text-white text-xs">
+                          Choose Cover Photo from Device (Phone / PC)
+                        </span>
+                        <span className="text-[10px] text-zinc-500">
+                          Select JPG, PNG or WEBP from your storage
+                        </span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
 
               <div>
@@ -437,7 +514,8 @@ export default function AdminCategoriesPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-gold-400 hover:bg-gold-300 text-black font-bold uppercase tracking-wider transition-colors"
+                  disabled={isUploading}
+                  className="px-6 py-2.5 rounded-xl bg-gold-400 hover:bg-gold-300 text-black font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
                 >
                   Save Category
                 </button>

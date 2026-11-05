@@ -1,24 +1,43 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Truck, 
-  RotateCcw, 
   ShieldCheck, 
   CreditCard, 
   MessageCircle, 
-  Instagram, 
-  Twitter, 
-  Facebook, 
   ArrowUpRight 
 } from 'lucide-react';
+import { getCategoriesData } from '@/lib/products-data';
+import { getSiteSettings } from '@/lib/site-settings';
+import { Category, SiteSettings } from '@/lib/types';
 
 export default function Footer() {
-  const brandName = process.env.NEXT_PUBLIC_BRAND_NAME || 'FLEXO LIFESTYLE';
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '919876543210';
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [settings, setSettings] = useState<SiteSettings>(getSiteSettings());
+
+  useEffect(() => {
+    setCategories(getCategoriesData());
+    setSettings(getSiteSettings());
+
+    const handleCatUpdate = () => setCategories(getCategoriesData());
+    const handleSetUpdate = () => setSettings(getSiteSettings());
+
+    window.addEventListener('categories-updated', handleCatUpdate);
+    window.addEventListener('site-settings-changed', handleSetUpdate);
+    return () => {
+      window.removeEventListener('categories-updated', handleCatUpdate);
+      window.removeEventListener('site-settings-changed', handleSetUpdate);
+    };
+  }, []);
+
+  const brandName = settings.brandName || 'FLEXO LIFESTYLE';
+  const whatsappNumber = settings.whatsappNumber || '919876543210';
 
   return (
     <footer className="bg-zinc-950 border-t border-zinc-800/80 text-zinc-400">
-      {/* Flipkart-style Trust Guarantee Banner */}
+      {/* Trust Guarantee Banner */}
       <div className="border-b border-zinc-800/60 py-8 bg-zinc-900/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center md:text-left">
@@ -28,7 +47,7 @@ export default function Footer() {
               </div>
               <div>
                 <h4 className="text-sm font-semibold text-white">Free Express Shipping</h4>
-                <p className="text-xs text-zinc-500">On all orders above ₹999</p>
+                <p className="text-xs text-zinc-500">On all prepaid & verified orders</p>
               </div>
             </div>
 
@@ -38,7 +57,7 @@ export default function Footer() {
               </div>
               <div>
                 <h4 className="text-sm font-semibold text-white">WhatsApp Help</h4>
-                <p className="text-xs text-zinc-500">Fast dedicated assistance</p>
+                <p className="text-xs text-zinc-500">Instant dedicated assistance</p>
               </div>
             </div>
 
@@ -57,8 +76,8 @@ export default function Footer() {
                 <CreditCard className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-white">UPI & COD Options</h4>
-                <p className="text-xs text-zinc-500">Zero fees, verified orders</p>
+                <h4 className="text-sm font-semibold text-white">UPI & Fast Checkout</h4>
+                <p className="text-xs text-zinc-500">Zero extra fees, verified dispatch</p>
               </div>
             </div>
           </div>
@@ -80,59 +99,42 @@ export default function Footer() {
             <p className="text-sm text-zinc-400 max-w-sm leading-relaxed">
               Elevating daily living through precision craftsmanship, contemporary streetwear tailoring, and timeless horology. Designed for those who value understated luxury.
             </p>
-            <div className="pt-2">
+            <div className="pt-2 flex flex-col sm:flex-row gap-3">
+              {settings.whatsappGroupLink && (
+                <a
+                  href={settings.whatsappGroupLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all text-xs font-semibold"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Join WhatsApp Community</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </a>
+              )}
               <a
                 href={`https://wa.me/${whatsappNumber}?text=Hi%20${encodeURIComponent(brandName)}%2C%20I%20would%20like%20to%20connect`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all text-xs font-semibold"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white transition-all text-xs font-semibold"
               >
-                <MessageCircle className="w-4 h-4" />
+                <MessageCircle className="w-4 h-4 text-emerald-400" />
                 <span>WhatsApp Help</span>
-                <ArrowUpRight className="w-3.5 h-3.5" />
               </a>
             </div>
           </div>
 
-          {/* Categories */}
+          {/* Dynamic Categories */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-200">Collections</h4>
             <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/shop?category=fashion-clothing" className="hover:text-gold-400 transition-colors">
-                  Fashion & Clothing
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?category=footwear" className="hover:text-gold-400 transition-colors">
-                  Footwear & Sneakers
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?category=watches" className="hover:text-gold-400 transition-colors">
-                  Automatic Watches
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?category=electronics-gadgets" className="hover:text-gold-400 transition-colors">
-                  Electronics & Gadgets
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?category=fashion-accessories" className="hover:text-gold-400 transition-colors">
-                  Fashion Accessories
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?category=personal-care" className="hover:text-gold-400 transition-colors">
-                  Personal Care
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?category=home-lifestyle" className="hover:text-gold-400 transition-colors">
-                  Home & Lifestyle
-                </Link>
-              </li>
+              {categories.map((c) => (
+                <li key={c.id}>
+                  <Link href={`/shop?category=${c.slug}`} className="hover:text-gold-400 transition-colors">
+                    {c.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -158,56 +160,31 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Legal & Policies */}
+          {/* Quick Info */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-200">Legal & Brand</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/about" className="hover:text-gold-400 transition-colors">
-                  Our Story & Heritage
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacy" className="hover:text-gold-400 transition-colors">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms" className="hover:text-gold-400 transition-colors">
-                  Terms of Service
-                </Link>
-              </li>
-              <li className="pt-2 flex items-center gap-3 text-zinc-400">
-                <a href="#" className="hover:text-white transition-colors" aria-label="Instagram">
-                  <Instagram className="w-4 h-4" />
-                </a>
-                <a href="#" className="hover:text-white transition-colors" aria-label="Twitter">
-                  <Twitter className="w-4 h-4" />
-                </a>
-                <a href="#" className="hover:text-white transition-colors" aria-label="Facebook">
-                  <Facebook className="w-4 h-4" />
-                </a>
-              </li>
-            </ul>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-200">Flexo Club</h4>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              Stay plugged in with our exclusive community for drops, secret links, and private capsule sales.
+            </p>
+            {settings.whatsappGroupLink && (
+              <a
+                href={settings.whatsappGroupLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-xs font-bold uppercase tracking-wider text-emerald-400 hover:underline"
+              >
+                Join WhatsApp Group &rarr;
+              </a>
+            )}
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-zinc-800/80 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
-          <p>© {new Date().getFullYear()} {brandName}. All rights reserved.</p>
-          <div className="flex items-center gap-3">
-            <span className="px-2 py-1 rounded bg-zinc-900 border border-zinc-800 text-[10px] font-mono text-zinc-400">
-              UPI
-            </span>
-            <span className="px-2 py-1 rounded bg-zinc-900 border border-zinc-800 text-[10px] font-mono text-zinc-400">
-              GPay / PhonePe
-            </span>
-            <span className="px-2 py-1 rounded bg-zinc-900 border border-zinc-800 text-[10px] font-mono text-zinc-400">
-              Cash on Delivery
-            </span>
-            <span className="px-2 py-1 rounded bg-zinc-900 border border-zinc-800 text-[10px] font-mono text-zinc-400">
-              Cards / NetBanking
-            </span>
+        <div className="pt-10 mt-10 border-t border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-400 gap-4">
+          <p>© {new Date().getFullYear()} {brandName}. All Rights Reserved.</p>
+          <div className="flex items-center gap-6">
+            <Link href="/privacy" className="hover:text-zinc-200 transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-zinc-200 transition-colors">Terms of Service</Link>
           </div>
         </div>
       </div>

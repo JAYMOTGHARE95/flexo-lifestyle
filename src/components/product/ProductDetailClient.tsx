@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -12,13 +12,16 @@ import {
   RotateCcw, 
   ShieldCheck, 
   Check, 
-  Tag
+  Tag,
+  ArrowLeft,
+  Loader2
 } from 'lucide-react';
 import ProductGallery from '@/components/product/ProductGallery';
 import PincodeChecker from '@/components/product/PincodeChecker';
 import ProductCard from '@/components/product/ProductCard';
 import { useCart } from '@/context/CartContext';
 import { Product } from '@/lib/types';
+import { getProductsData } from '@/lib/products-data';
 import { 
   formatPrice, 
   calculateDiscountPercentage, 
@@ -26,23 +29,71 @@ import {
 } from '@/lib/utils';
 
 interface ProductDetailClientProps {
-  product: Product;
-  relatedProducts: Product[];
+  slug: string;
+  initialProduct?: Product | null;
+  initialRelatedProducts?: Product[];
 }
 
 export default function ProductDetailClient({
-  product,
-  relatedProducts,
+  slug,
+  initialProduct,
+  initialRelatedProducts,
 }: ProductDetailClientProps) {
   const router = useRouter();
   const { addItem } = useCart();
 
-  // State
-  const [selectedSize, setSelectedSize] = useState(product.sizes[0] || 'Standard');
-  const [selectedColor, setSelectedColor] = useState(product.colors[0]?.name || 'Standard');
+  const [product, setProduct] = useState<Product | null>(initialProduct || null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>(initialRelatedProducts || []);
+  const [loading, setLoading] = useState(!initialProduct);
+
+  const [selectedSize, setSelectedSize] = useState(initialProduct?.sizes?.[0] || 'Standard');
+  const [selectedColor, setSelectedColor] = useState(initialProduct?.colors?.[0]?.name || 'Standard');
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
   const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'reviews'>('description');
+
+  useEffect(() => {
+    const all = getProductsData();
+    const found = all.find((p) => p.slug === slug);
+    if (found) {
+      setProduct(found);
+      if (found.sizes?.length) setSelectedSize(found.sizes[0]);
+      if (found.colors?.length) setSelectedColor(found.colors[0]?.name);
+
+      const rel = all.filter((p) => p.category === found.category && p.id !== found.id).slice(0, 4);
+      setRelatedProducts(rel);
+    }
+    setLoading(false);
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="bg-zinc-950 min-h-screen py-24 flex flex-col items-center justify-center text-zinc-400 gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-gold-400" />
+        <span className="text-xs uppercase tracking-widest font-mono">Loading product details...</span>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="bg-zinc-950 min-h-screen py-24 px-4 flex flex-col items-center justify-center text-center">
+        <h2 className="font-display font-black text-2xl sm:text-3xl text-white mb-2">
+          PRODUCT NOT FOUND
+        </h2>
+        <p className="text-xs sm:text-sm text-zinc-400 max-w-md mb-8">
+          The requested product may have been moved or removed from our catalog inventory.
+        </p>
+        <Link
+          href="/shop"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gold-400 text-black font-bold text-xs uppercase tracking-wider hover:bg-gold-300 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Browse All Products</span>
+        </Link>
+      </div>
+    );
+  }
 
   const discountPercent = calculateDiscountPercentage(product.price, product.discountPrice);
   const currentPrice = product.discountPrice || product.price;

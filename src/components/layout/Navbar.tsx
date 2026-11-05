@@ -16,9 +16,9 @@ import {
   User
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { SAMPLE_PRODUCTS } from '@/lib/products-data';
+import { getProductsData, getCategoriesData } from '@/lib/products-data';
 import { getSiteSettings } from '@/lib/site-settings';
-import { SiteSettings } from '@/lib/types';
+import { SiteSettings, Product, Category } from '@/lib/types';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -28,11 +28,25 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [settings, setSettings] = useState<SiteSettings>(getSiteSettings());
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    const handleUpdate = () => setSettings(getSiteSettings());
-    window.addEventListener('site-settings-changed', handleUpdate);
-    return () => window.removeEventListener('site-settings-changed', handleUpdate);
+    const handleSettingsUpdate = () => setSettings(getSiteSettings());
+    const handleProductsUpdate = () => setProducts(getProductsData());
+    const handleCategoriesUpdate = () => setCategories(getCategoriesData());
+
+    setProducts(getProductsData());
+    setCategories(getCategoriesData());
+
+    window.addEventListener('site-settings-changed', handleSettingsUpdate);
+    window.addEventListener('products-updated', handleProductsUpdate);
+    window.addEventListener('categories-updated', handleCategoriesUpdate);
+    return () => {
+      window.removeEventListener('site-settings-changed', handleSettingsUpdate);
+      window.removeEventListener('products-updated', handleProductsUpdate);
+      window.removeEventListener('categories-updated', handleCategoriesUpdate);
+    };
   }, []);
 
   const brandName = settings.brandName || 'FLEXO LIFESTYLE';
@@ -54,21 +68,20 @@ export default function Navbar() {
   }, [pathname]);
 
   const searchResults = searchQuery.trim().length > 1
-    ? SAMPLE_PRODUCTS.filter(p => 
+    ? products.filter(p => 
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchQuery.toLowerCase())
+        p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.subcategory && p.subcategory.toLowerCase().includes(searchQuery.toLowerCase()))
       ).slice(0, 5)
     : [];
 
   const navLinks = [
     { name: 'Home', href: '/' },
     { name: 'Shop All', href: '/shop' },
-    { name: 'Clothing', href: '/shop?category=fashion-clothing' },
-    { name: 'Footwear', href: '/shop?category=footwear' },
-    { name: 'Watches', href: '/shop?category=watches' },
-    { name: 'Gadgets', href: '/shop?category=electronics-gadgets' },
-    { name: 'Accessories', href: '/shop?category=fashion-accessories' },
-    { name: 'Lifestyle', href: '/shop?category=home-lifestyle' },
+    ...categories.map(c => ({
+      name: c.name.split('&')[0].trim(),
+      href: `/shop?category=${c.slug}`,
+    })),
   ];
 
   return (

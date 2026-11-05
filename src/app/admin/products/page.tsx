@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Plus, 
   Search, 
@@ -13,11 +13,15 @@ import {
   Check, 
   Tag, 
   Layers,
-  RotateCcw
+  RotateCcw,
+  Upload,
+  Image as ImageIcon,
+  Loader2
 } from 'lucide-react';
 import { getProductsData, saveLocalProducts, getCategoriesData, SAMPLE_PRODUCTS, INITIAL_CATEGORIES } from '@/lib/products-data';
 import { Product, Category, CategorySlug } from '@/lib/types';
 import { formatPrice } from '@/lib/utils';
+import { uploadImageFiles } from '@/lib/upload-helper';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -27,6 +31,8 @@ export default function AdminProductsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -40,7 +46,7 @@ export default function AdminProductsPage() {
     stock: '20',
     sizes: 'S, M, L, XL',
     colors: 'Pitch Black, Bone White',
-    imageUrl: '',
+    images: [] as string[],
     isFeatured: false,
     isActive: true,
   });
@@ -94,7 +100,7 @@ export default function AdminProductsPage() {
       stock: '20',
       sizes: 'S, M, L, XL',
       colors: 'Pitch Black, Bone White',
-      imageUrl: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=1000&q=80',
+      images: [],
       isFeatured: false,
       isActive: true,
     });
@@ -114,11 +120,49 @@ export default function AdminProductsPage() {
       stock: String(p.stock),
       sizes: p.sizes.join(', '),
       colors: p.colors.map((c) => c.name).join(', '),
-      imageUrl: p.images[0] || '',
+      images: p.images && p.images.length > 0 ? [...p.images] : [],
       isFeatured: p.isFeatured,
       isActive: p.isActive,
     });
     setIsModalOpen(true);
+  };
+
+  // Handle direct file uploads from user device (Phone / PC)
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      setIsUploading(true);
+      const newUrls = await uploadImageFiles(files);
+      setFormData((prev) => ({
+        ...prev,
+        images: [...prev.images, ...newUrls],
+      }));
+    } catch (err: any) {
+      alert('Failed to upload image: ' + (err?.message || 'Unknown error'));
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveImage = (indexToRemove: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, idx) => idx !== indexToRemove),
+    }));
+  };
+
+  const handleSetCoverImage = (indexToCover: number) => {
+    setFormData((prev) => {
+      const selected = prev.images[indexToCover];
+      const rest = prev.images.filter((_, idx) => idx !== indexToCover);
+      return {
+        ...prev,
+        images: [selected, ...rest],
+      };
+    });
   };
 
   const handleToggleActive = (id: string) => {
@@ -147,6 +191,11 @@ export default function AdminProductsPage() {
   const handleSaveProduct = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (formData.images.length === 0) {
+      alert('Please upload at least 1 product photo from your device.');
+      return;
+    }
+
     const priceNum = Number(formData.price) || 0;
     const discountNum = formData.discountPrice ? Number(formData.discountPrice) : undefined;
     const sizesArray = formData.sizes.split(',').map((s) => s.trim()).filter(Boolean);
@@ -155,6 +204,12 @@ export default function AdminProductsPage() {
       hex: '#27272a',
     })).filter((c) => c.name);
 
+    const generatedSlug = (formData.slug || formData.name)
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+
     if (editingProduct) {
       // Edit
       const updated = products.map((p) =>
@@ -162,7 +217,7 @@ export default function AdminProductsPage() {
           ? {
               ...p,
               name: formData.name,
-              slug: formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+              slug: generatedSlug,
               category: formData.category,
               subcategory: formData.subcategory,
               price: priceNum,
@@ -171,19 +226,19 @@ export default function AdminProductsPage() {
               stock: Number(formData.stock) || 10,
               sizes: sizesArray,
               colors: colorsArray,
-              images: [formData.imageUrl || p.images[0], ...(p.images.slice(1))],
+              images: formData.images,
               isFeatured: formData.isFeatured,
               isActive: formData.isActive,
             }
           : p
       );
-      persistProducts(updated, `Updated "${formData.name}".`);
+      persistProducts(updated, `Updated "${formData.name}". Changes are now live on website.`);
     } else {
       // Add
       const newProduct: Product = {
         id: `prod-${Date.now()}`,
         name: formData.name,
-        slug: formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        slug: generatedSlug,
         category: formData.category,
         subcategory: formData.subcategory,
         price: priceNum,
@@ -192,13 +247,13 @@ export default function AdminProductsPage() {
         stock: Number(formData.stock) || 10,
         sizes: sizesArray,
         colors: colorsArray,
-        images: [formData.imageUrl || 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=1000&q=80'],
+        images: formData.images,
         isFeatured: formData.isFeatured,
         isActive: formData.isActive,
         rating: 5.0,
         reviewCount: 1,
       };
-      persistProducts([newProduct, ...products], `Added "${formData.name}".`);
+      persistProducts([newProduct, ...products], `Added "${formData.name}". Now live on website.`);
     }
 
     setIsModalOpen(false);
@@ -216,7 +271,7 @@ export default function AdminProductsPage() {
             PRODUCTS MANAGEMENT
           </h1>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Manage your fashion pieces, pricing, subcategory tags, and inventory.
+            Manage your fashion pieces, direct photo uploads, pricing, subcategory tags, and stock.
           </p>
         </div>
 
@@ -297,11 +352,24 @@ export default function AdminProductsPage() {
                 <tr key={prod.id} className="hover:bg-zinc-850/40">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <img
-                        src={prod.images[0]}
-                        alt={prod.name}
-                        className="w-12 h-14 object-cover rounded-lg border border-zinc-800 shrink-0"
-                      />
+                      <div className="relative w-12 h-14 rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950 shrink-0">
+                        {prod.images?.[0] ? (
+                          <img
+                            src={prod.images[0]}
+                            alt={prod.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-zinc-600">
+                            <ImageIcon className="w-5 h-5" />
+                          </div>
+                        )}
+                        {prod.images && prod.images.length > 1 && (
+                          <span className="absolute bottom-0.5 right-0.5 bg-black/80 text-[9px] font-mono text-zinc-300 px-1 rounded">
+                            +{prod.images.length - 1}
+                          </span>
+                        )}
+                      </div>
                       <div className="min-w-0">
                         <p className="font-semibold text-white truncate max-w-xs">{prod.name}</p>
                         <p className="text-[11px] text-zinc-500 font-mono">slug: {prod.slug}</p>
@@ -409,12 +477,17 @@ export default function AdminProductsPage() {
 
       {/* Add / Edit Product Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-zinc-950 border border-zinc-800 rounded-3xl w-full max-w-2xl p-6 sm:p-8 space-y-6 shadow-2xl my-8">
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-3xl w-full max-w-2xl p-6 sm:p-8 space-y-6 shadow-2xl my-8 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
-              <h3 className="font-display font-bold text-lg text-white">
-                {editingProduct ? 'Edit Product Details' : 'Add New Product to Store'}
-              </h3>
+              <div>
+                <h3 className="font-display font-bold text-lg text-white">
+                  {editingProduct ? 'Edit Product Details' : 'Add New Product to Store'}
+                </h3>
+                <p className="text-[11px] text-zinc-400">
+                  Fill details and upload product photos directly from your phone or PC.
+                </p>
+              </div>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="p-2 text-zinc-400 hover:text-white"
@@ -423,7 +496,7 @@ export default function AdminProductsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
+            <form onSubmit={handleSaveProduct} className="space-y-5 text-xs">
               <div>
                 <label className="font-semibold text-zinc-300 block mb-1">Product Name *</label>
                 <input
@@ -478,6 +551,111 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
+              {/* Direct Multi-Image Upload (NO URL option) */}
+              <div className="space-y-2 p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-white flex items-center gap-1.5">
+                    <Upload className="w-4 h-4 text-gold-400" />
+                    <span>Upload Product Photos *</span>
+                  </label>
+                  <span className="text-[11px] text-zinc-400 font-mono">
+                    {formData.images.length} {formData.images.length === 1 ? 'photo' : 'photos'} uploaded
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-zinc-400">
+                  Direct file upload from your device. First photo is used as the store cover image. Multiple photos supported (front, back, model, details).
+                </p>
+
+                {/* Hidden file input */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+
+                {/* Upload action button / dropzone */}
+                <button
+                  type="button"
+                  disabled={isUploading}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full py-5 border-2 border-dashed border-zinc-700 hover:border-gold-400/80 rounded-2xl bg-zinc-950/60 hover:bg-zinc-900/80 transition-all flex flex-col items-center justify-center gap-2 text-zinc-300 group cursor-pointer"
+                >
+                  {isUploading ? (
+                    <div className="flex items-center gap-2 text-gold-400 font-semibold">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Optimizing & uploading photos...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 rounded-full bg-zinc-850 group-hover:bg-gold-400/20 group-hover:text-gold-400 flex items-center justify-center text-zinc-400 transition-colors">
+                        <Upload className="w-5 h-5" />
+                      </div>
+                      <div className="text-center">
+                        <span className="font-bold text-white text-xs block group-hover:text-gold-400 transition-colors">
+                          Choose Photos from Device (Phone / PC)
+                        </span>
+                        <span className="text-[10px] text-zinc-500">
+                          Supports JPG, PNG, WEBP. Select multiple files at once.
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </button>
+
+                {/* Uploaded Gallery Grid */}
+                {formData.images.length > 0 && (
+                  <div className="pt-3">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 block mb-2">
+                      Uploaded Photos Preview (Drag or click &apos;Set as Cover&apos; to reorder)
+                    </span>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                      {formData.images.map((imgUrl, idx) => (
+                        <div
+                          key={idx}
+                          className="relative group rounded-xl overflow-hidden border border-zinc-700 bg-zinc-950 aspect-[3/4]"
+                        >
+                          <img
+                            src={imgUrl}
+                            alt={`Product preview ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+
+                          {/* Cover badge */}
+                          {idx === 0 ? (
+                            <span className="absolute top-1.5 left-1.5 bg-gold-400 text-black text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow">
+                              COVER
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleSetCoverImage(idx)}
+                              className="absolute top-1.5 left-1.5 bg-black/80 hover:bg-gold-400 hover:text-black text-white text-[9px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Make this the main cover photo"
+                            >
+                              Set Cover
+                            </button>
+                          )}
+
+                          {/* Delete photo button */}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(idx)}
+                            className="absolute top-1.5 right-1.5 bg-rose-600/90 hover:bg-rose-600 text-white p-1 rounded-full opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shadow"
+                            title="Remove photo"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="font-semibold text-zinc-300 block mb-1">Stock Units *</label>
@@ -515,18 +693,6 @@ export default function AdminProductsPage() {
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-white font-mono focus:outline-none focus:border-gold-400"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="font-semibold text-zinc-300 block mb-1">Image URL (Unsplash or direct) *</label>
-                <input
-                  type="url"
-                  required
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  placeholder="https://images.unsplash.com/photo-..."
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-white font-mono text-[11px] focus:outline-none focus:border-gold-400"
-                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -597,7 +763,8 @@ export default function AdminProductsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-gold-400 hover:bg-gold-300 text-black font-bold uppercase tracking-wider transition-colors"
+                  disabled={isUploading}
+                  className="px-6 py-2.5 rounded-xl bg-gold-400 hover:bg-gold-300 text-black font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
                 >
                   Save Product
                 </button>

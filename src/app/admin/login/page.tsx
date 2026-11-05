@@ -8,13 +8,13 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@flexolifestyle.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('jaymotghare95@gmail.com');
+  const [password, setPassword] = useState('Jayesh123***');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const brandName = process.env.NEXT_PUBLIC_BRAND_NAME || 'FLEXO LIFESTYLE';
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@flexolifestyle.com';
+  const adminEmail = process.env.ADMIN_EMAIL || 'jaymotghare95@gmail.com';
 
   const grantAccess = () => {
     if (typeof window !== 'undefined') {
@@ -36,6 +36,7 @@ export default function AdminLoginPage() {
     const envPass = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
     const isMasterPass = 
+      inputPass === 'Jayesh123***' ||
       (customPass && inputPass === customPass) ||
       (envPass && inputPass === envPass) ||
       inputPassLower === 'admin123' || 
@@ -59,13 +60,19 @@ export default function AdminLoginPage() {
         });
 
         if (error) {
-          setErrorMsg(error.message + ' (Tip: You can use master passcode: admin123)');
+          setErrorMsg(error.message + ' (Tip: You can use passcode: Jayesh123***)');
           setIsLoading(false);
           return;
         }
 
-        if (data.user?.email?.toLowerCase() !== adminEmail.toLowerCase()) {
-          setErrorMsg(`Access denied for ${data.user?.email}. Only ${adminEmail} has owner privileges.`);
+        const allowedEmails = [
+          adminEmail.toLowerCase(),
+          'jaymotghare95@gmail.com',
+          'admin@flexolifestyle.com',
+        ];
+
+        if (!allowedEmails.includes(data.user?.email?.toLowerCase() || '')) {
+          setErrorMsg(`Access denied for ${data.user?.email}. Only the owner has admin privileges.`);
           await supabase.auth.signOut();
           setIsLoading(false);
           return;
@@ -73,10 +80,10 @@ export default function AdminLoginPage() {
 
         grantAccess();
       } else {
-        setErrorMsg('Invalid password. Use master passcode: admin123');
+        setErrorMsg('Invalid password. Correct passcode is: Jayesh123***');
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'Authentication error. Use passcode: admin123');
+      setErrorMsg(err.message || 'Authentication error. Use passcode: Jayesh123***');
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +103,7 @@ export default function AdminLoginPage() {
             {brandName} ADMIN
           </h1>
           <p className="text-xs text-zinc-400">
-            Sign in to manage products, categories, orders, and WhatsApp settings.
+            Sign in as store owner to manage products, categories, orders, and site settings.
           </p>
         </div>
 
@@ -111,28 +118,28 @@ export default function AdminLoginPage() {
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="text-xs font-semibold text-zinc-300 block mb-1.5">
-                Admin Email
+                Owner Email
               </label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@flexolifestyle.com"
+                placeholder="jaymotghare95@gmail.com"
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400"
               />
             </div>
 
             <div>
               <label className="text-xs font-semibold text-zinc-300 block mb-1.5">
-                Password / Passcode
+                Admin Password
               </label>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="admin123"
+                placeholder="Jayesh123***"
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-gold-400 font-mono"
               />
             </div>
@@ -144,7 +151,7 @@ export default function AdminLoginPage() {
             >
               {isLoading ? <span>Authenticating...</span> : (
                 <>
-                  <span>Access Dashboard</span>
+                  <span>Sign In as Owner</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -159,17 +166,17 @@ export default function AdminLoginPage() {
               className="w-full py-3 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/30 text-emerald-400 font-semibold text-xs transition-colors flex items-center justify-center gap-2"
             >
               <Sparkles className="w-4 h-4" />
-              <span>⚡ 1-Click Owner Access (Direct Login)</span>
+              <span>⚡ 1-Click Instant Owner Login</span>
             </button>
           </div>
 
           <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-850 text-[11px] text-zinc-400 space-y-1">
             <div className="flex items-center gap-1.5 text-gold-400 font-semibold">
               <KeyRound className="w-3.5 h-3.5" />
-              <span>Owner Passcode</span>
+              <span>Owner Credentials</span>
             </div>
             <p className="text-zinc-500">
-              Default passcode is <code className="text-gold-400 font-mono font-bold">admin123</code> or click the green direct login button above.
+              Email: <code className="text-white font-mono">jaymotghare95@gmail.com</code> • Password: <code className="text-gold-400 font-mono font-bold">Jayesh123***</code>
             </p>
           </div>
         </div>

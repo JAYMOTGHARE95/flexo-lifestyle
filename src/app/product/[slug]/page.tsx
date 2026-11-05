@@ -1,7 +1,8 @@
-import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { SAMPLE_PRODUCTS } from '@/lib/products-data';
 import ProductDetailClient from '@/components/product/ProductDetailClient';
+
+export const dynamicParams = true;
 
 export function generateStaticParams() {
   return SAMPLE_PRODUCTS.map((p) => ({
@@ -15,8 +16,12 @@ export async function generateMetadata({
   params: { slug: string };
 }): Promise<Metadata> {
   const product = SAMPLE_PRODUCTS.find((p) => p.slug === params.slug);
-  if (!product) return {};
   const brandName = process.env.NEXT_PUBLIC_BRAND_NAME || 'FLEXO LIFESTYLE';
+  if (!product) {
+    return {
+      title: `Product Details | ${brandName}`,
+    };
+  }
   return {
     title: `${product.name} | ${brandName}`,
     description: product.description,
@@ -33,19 +38,18 @@ export default function ProductDetailPage({
 }: {
   params: { slug: string };
 }) {
-  const product = SAMPLE_PRODUCTS.find((p) => p.slug === params.slug);
-  if (!product) {
-    notFound();
-  }
-
-  const relatedProducts = SAMPLE_PRODUCTS.filter(
-    (p) => p.category === product.category && p.id !== product.id
-  ).slice(0, 4);
+  const initialProduct = SAMPLE_PRODUCTS.find((p) => p.slug === params.slug) || null;
+  const initialRelated = initialProduct
+    ? SAMPLE_PRODUCTS.filter(
+        (p) => p.category === initialProduct.category && p.id !== initialProduct.id
+      ).slice(0, 4)
+    : [];
 
   return (
     <ProductDetailClient
-      product={product}
-      relatedProducts={relatedProducts}
+      slug={params.slug}
+      initialProduct={initialProduct}
+      initialRelatedProducts={initialRelated}
     />
   );
 }

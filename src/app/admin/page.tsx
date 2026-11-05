@@ -13,12 +13,13 @@ import {
   Users 
 } from 'lucide-react';
 import { getAllOrders, updateOrderStatus } from '@/lib/supabase';
-import { SAMPLE_PRODUCTS } from '@/lib/products-data';
-import { Order } from '@/lib/types';
+import { getProductsData } from '@/lib/products-data';
+import { Order, Product } from '@/lib/types';
 import { formatPrice, formatDate } from '@/lib/utils';
 
 export default function AdminDashboardPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,13 +27,18 @@ export default function AdminDashboardPage() {
       setOrders(data);
       setLoading(false);
     });
+    setProducts(getProductsData());
+
+    const handleProductsUpdate = () => setProducts(getProductsData());
+    window.addEventListener('products-updated', handleProductsUpdate);
+    return () => window.removeEventListener('products-updated', handleProductsUpdate);
   }, []);
 
   const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
   const totalOrders = orders.length;
   const pendingOrders = orders.filter((o) => o.status === 'pending').length;
   const pendingUpi = orders.filter((o) => o.paymentMethod === 'upi' && o.paymentStatus === 'pending_verification').length;
-  const lowStockProducts = SAMPLE_PRODUCTS.filter((p) => p.stock < 15);
+  const lowStockProducts = products.filter((p) => p.stock < 15);
 
   const handleVerifyUpi = async (orderId: string) => {
     await updateOrderStatus(orderId, 'confirmed', 'verified');

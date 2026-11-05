@@ -1,12 +1,28 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
-import { CATEGORIES } from '@/lib/products-data';
+import { getCategoriesData } from '@/lib/products-data';
+import { Category } from '@/lib/types';
 
 export default function CategoryTiles() {
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    setCategories(getCategoriesData());
+
+    const handleUpdate = () => {
+      setCategories(getCategoriesData());
+    };
+
+    window.addEventListener('categories-updated', handleUpdate);
+    return () => window.removeEventListener('categories-updated', handleUpdate);
+  }, []);
+
+  if (categories.length === 0) return null;
+
   return (
     <section className="py-20 bg-zinc-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,7 +47,7 @@ export default function CategoryTiles() {
 
         {/* Categories Grid - 2 cols on mobile */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-          {CATEGORIES.map((category, index) => {
+          {categories.map((category, index) => {
             const isLarge = index === 0;
             return (
               <motion.div
@@ -61,7 +77,7 @@ export default function CategoryTiles() {
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-gold-400 font-semibold">
-                          {category.itemCount || 'Curated'} Pieces
+                          Explore Collection
                         </span>
                         <h3 className="font-display font-black text-lg sm:text-3xl text-white tracking-tight mt-0.5 group-hover:text-gold-300 transition-colors">
                           {category.name}
