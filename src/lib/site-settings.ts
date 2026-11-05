@@ -39,6 +39,14 @@ export function updateSiteSettings(updated: Partial<SiteSettings>): SiteSettings
     const merged = { ...current, ...updated };
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
     window.dispatchEvent(new Event('site-settings-changed'));
+
+    // Persist to server so updates are visible across all phones, tablets, and computers
+    fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ settings: merged }),
+    }).catch((err) => console.warn('Server sync error for settings:', err));
+
     return merged;
   } catch (e) {
     console.error('Failed to update site settings', e);

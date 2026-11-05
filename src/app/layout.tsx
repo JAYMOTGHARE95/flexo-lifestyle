@@ -5,6 +5,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/layout/CartDrawer';
 import WhatsAppFloat from '@/components/layout/WhatsAppFloat';
+import StoreSyncProvider from '@/components/providers/StoreSyncProvider';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -67,13 +68,15 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col bg-zinc-950 text-zinc-100 font-sans selection:bg-gold-400 selection:text-black">
-        <CartProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <CartDrawer />
-          <WhatsAppFloat />
-        </CartProvider>
+        <StoreSyncProvider>
+          <CartProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <CartDrawer />
+            <WhatsAppFloat />
+          </CartProvider>
+        </StoreSyncProvider>
       </body>
     </html>
   );

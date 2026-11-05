@@ -507,6 +507,13 @@ export function saveLocalProducts(products: Product[]): void {
   if (typeof window !== 'undefined') {
     localStorage.setItem('flexo_products_v2', JSON.stringify(products));
     window.dispatchEvent(new Event('products-updated'));
+
+    // Persist to server so updates are visible across all phones, tablets, and computers
+    fetch('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ products }),
+    }).catch((err) => console.warn('Server sync error for products:', err));
   }
 }
 

@@ -198,6 +198,13 @@ export function saveLocalCategories(cats: Category[]) {
   if (typeof window !== 'undefined') {
     localStorage.setItem('flexo_categories_v2', JSON.stringify(cats));
     window.dispatchEvent(new Event('categories-updated'));
+
+    // Persist to server so updates are visible across all phones, tablets, and computers
+    fetch('/api/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ categories: cats }),
+    }).catch((err) => console.warn('Server sync error for categories:', err));
   }
 }
 
