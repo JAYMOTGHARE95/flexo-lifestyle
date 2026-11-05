@@ -13,12 +13,11 @@ import {
   Check, 
   Tag, 
   Layers,
-  RotateCcw,
   Upload,
   Image as ImageIcon,
   Loader2
 } from 'lucide-react';
-import { getProductsData, saveLocalProducts, getCategoriesData, SAMPLE_PRODUCTS, INITIAL_CATEGORIES } from '@/lib/products-data';
+import { getProductsData, saveLocalProducts, getCategoriesData } from '@/lib/products-data';
 import { Product, Category, CategorySlug } from '@/lib/types';
 import { formatPrice } from '@/lib/utils';
 import { uploadImageFiles } from '@/lib/upload-helper';
@@ -182,12 +181,6 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleResetToDefaults = () => {
-    if (confirm('Reset catalogue to original sample products?')) {
-      persistProducts(SAMPLE_PRODUCTS, 'Catalog reset to defaults.');
-    }
-  };
-
   const handleSaveProduct = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -276,15 +269,6 @@ export default function AdminProductsPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleResetToDefaults}
-            className="px-3.5 py-2.5 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
-            title="Reset catalog to default items"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Reset Defaults</span>
-          </button>
-
           <button
             onClick={handleOpenAdd}
             className="px-5 py-2.5 rounded-xl bg-gold-400 hover:bg-gold-300 text-black font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-lg"

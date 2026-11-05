@@ -12,12 +12,11 @@ import {
   Layers, 
   AlertCircle,
   Save,
-  RotateCcw,
   Upload,
   Image as ImageIcon,
   Loader2
 } from 'lucide-react';
-import { getCategoriesData, INITIAL_CATEGORIES } from '@/lib/products-data';
+import { getCategoriesData } from '@/lib/products-data';
 import { saveLocalCategories } from '@/lib/supabase';
 import { Category, Subcategory } from '@/lib/types';
 import { uploadSingleImage } from '@/lib/upload-helper';
@@ -148,12 +147,6 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const handleResetToDefaults = () => {
-    if (confirm('Reset all categories and subcategories to initial brand defaults?')) {
-      persistCategories(INITIAL_CATEGORIES, 'Reset to default 7 brand categories.');
-    }
-  };
-
   const handleSaveModal = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -225,15 +218,6 @@ export default function AdminCategoriesPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleResetToDefaults}
-            className="px-3.5 py-2.5 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
-            title="Reset to brand default categories"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Reset Defaults</span>
-          </button>
-
           <button
             onClick={handleOpenAdd}
             className="px-5 py-2.5 rounded-xl bg-gold-400 hover:bg-gold-300 text-black font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-lg"
